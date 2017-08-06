@@ -47,5 +47,6 @@
 (define nil-cps (cps '()))
 (define (cons-cps a d)
   (cps (cons a d)))
+(define (id x) x)
 
 (struct var (v))
