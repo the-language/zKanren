@@ -26,5 +26,18 @@
 (define (thaw* x) ((sized-v x)))
 (define-syntax-rule (freeze/cons a d)
   (freeze1 (cons a d)))
+(define (fmap-sized1 f xs)
+  (let ((a (car xs)) (d (cdr xs)))
+    (let loop ((x-s (sized-s a)) (x-v (sized-v a)) (xs d) (ys '()))
+      (if (null? xs)
+          (sized x-s (lambda () (f (x-v) ys)))
+          (let ((y (car xs)) (xs (cdr xs)))
+            (if (< (sized-s y) x-s)
+                (loop (sized-s y) (sized-v y) xs (cons (sized x-s x-v) ys))
+                (loop x-s x-v xs (cons y ys))))))))
+(struct disj-v (v))
+(struct conj-v (v))
+(struct goal (s u))
+
 
 (struct var (v))
