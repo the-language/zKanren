@@ -38,6 +38,11 @@
 (struct disj-v (v))
 (struct conj-v (v))
 (struct goal (s u))
-
+(define (mplus xs ys)
+  (cond
+    ((null? xs) ys)
+    ((> (sized-s xs) (sized-s ys)) (mplus (ys xs)))
+    (else (fmap-sized (lambda (xs)
+                        (cons (car xs) (mplus (cdr xs) ys)))))))
 
 (struct var (v))
