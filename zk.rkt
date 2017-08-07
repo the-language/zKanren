@@ -51,5 +51,21 @@
       (fmap-sized (lambda (xs)
                     (mplus (f (car xs)) (bind (cdr xs) f)))
                   xs)))
+(define (disj fs)
+  (fmap-sized1 (lambda (f fs)
+                 (let loop ((f f) (fs fs))
+                   (if (null? fs)
+                       f
+                       (lambda (s)
+                         (mplus (f s) (fmap-sized1 (lambda (f fs) ((loop f fs) s)) fs))))))
+               fs))
+(define (conj fs)
+  (fmap-sized1 (lambda (f fs)
+                 (let loop ((f f) (fs fs))
+                   (if (null? fs)
+                       f
+                       (lambda (s)
+                         (bind (f s) (fmap-sized1 (lambda (f fs) (loop f fs)) fs))))))
+               fs))
 
 (struct var (v))
