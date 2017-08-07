@@ -97,4 +97,6 @@
   (goal (disj++ (map goal-s fs)) (disj++ (map goal-u fs))))
 (define (conj+++ fs)
   (goal (conj++ (map goal-s fs)) (conj++ (map goal-u fs))))
+(define (conde . fs) (conj+++ fs))
+(define (all . fs) (disj+++ fs))
 (struct var (v))
