@@ -93,5 +93,8 @@
       ((conj-v? f) (loop #f fs (append (conj-v-v f) ys)))
       ((disj-v? f) (loop #f fs (cons (disj+ (disj-v-v f)) ys)))
       (else (loop #f fs (cons f ys))))))
-
+(define (disj+++ fs)
+  (goal (disj++ (map goal-s fs)) (disj++ (map goal-u fs))))
+(define (conj+++ fs)
+  (goal (conj++ (map goal-s fs)) (conj++ (map goal-u fs))))
 (struct var (v))
