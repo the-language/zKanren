@@ -107,6 +107,6 @@
   (goal (conj++ (map goal-s fs)) (disj++ (map goal-u fs))))
 (define (all . fs) (conj+++ fs))
 (define-syntax-rule (conde (g ...))
-  (disj+++ `(,(all g) ...)))
+  (disj+++ (list (all g) ...)))
 (define (noto g) (goal (goal-u g) (goal-s g)))
 (struct var (v))
