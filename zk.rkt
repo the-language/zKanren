@@ -97,7 +97,7 @@
   (goal (disj++ (map goal-s fs)) (conj++ (map goal-u fs))))
 (define (conj+++ fs)
   (goal (conj++ (map goal-s fs)) (disj++ (map goal-u fs))))
-(define (all . fs) (disj+++ fs))
+(define (all . fs) (conj+++ fs))
 (define-syntax-rule (conde (g ...))
   (disj+++ `(,(all g) ...)))
 (define (noto g) (goal (goal-u g) (goal-s g)))
