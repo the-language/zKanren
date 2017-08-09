@@ -26,7 +26,7 @@
 (struct goal0 (v))
 #| [Goal0] → ConjV |#
 (struct conj-v (v))
-#| [Goal0] → Goal1 → DisjV |#
+#| [Goal0] → Promise Goal1 → DisjV |#
 (struct disj-v (h t))
 (define disj-v-max 16)
 #| Goal1 = U Goal0 ConjV DisjV |#
