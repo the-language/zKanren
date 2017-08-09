@@ -47,3 +47,10 @@
     ((null? xs) ys)
     ((promise? xs) (delay/name (mplus ys (force xs))))
     (else (cons (car xs) (mplus (cdr xs) ys)))))
+
+#| Stream a → (a → Stream b) → Stream b |#
+(define (bind xs f)
+  (cond
+    ((null? xs) '())
+    ((promise? xs) (delay/name (bind (force xs) f)))
+    (else (mplus (f (car xs)) (bind (cdr xs) f)))))
