@@ -72,14 +72,30 @@
 #| DisjV → Goal0 |#
 (define (disj-v->goal0 d)
   (let ((h (sort (disj-v-h d)
-                 (lambda (x y) (> (sized-s (goal0-v x)) (sized-s (goal0-v y))))))
+                 >goal0))
         (t (disj-v-t d)))
     (goal0 (sized (foldl + 0 (map (λ (x) (sized-s (goal0-v x))) h))
                   (delay/name
                    (λ (s)
+                     ;;(if
                      (mplus ((foldl dodisj-v->goal0 (car h) (cdr h)) s) ((goal1->goal0 t) s))))))))
 
 #| Goal0 → Goal0 → (State → Stream State) |#
 (define ((dodisj-v->goal0 g1 g2) s)
   (mplus ((force (sized-v (goal0-v g1))) s)
          ((force (sized-v (goal0-v g2))) s)))
+
+#| Goal1 → Goal0 |#
+(define (goal1->goal0 g)
+  (cond
+    ((disj-v? g) (disj-v->goal0 g))
+    ((conj-v? g) (conj-v->goal0 g))
+    (else g)))
+
+#| Goal0 → Goal0 → Bool |#
+(define (>goal0 x y)
+  (> (sized-s (goal0-v x)) (sized-s (goal0-v y))))
+
+#| ConjV → Goal0 |#
+(define (conj-v->goal0 g)
+  (let ((gs (sort (conj-v-v g) >goal0))) (error "conj-v->goal0")))
