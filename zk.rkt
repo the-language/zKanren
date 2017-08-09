@@ -14,21 +14,29 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
+
 #| a → a |#
 (define (id x) x)
+
 #| Nat → Var |#
 (struct var (v))
+
 #| Stream a |#
 (define stream-nil (delay/name '()))
+
 #| a → Stream a → Stream a |#
 (define (stream-cons a d) (delay (cons a d)))
+
 #| (State → Stream State) → Goal0 |#
 (struct goal0 (v))
+
 #| [Goal0] → ConjV |#
 (struct conj-v (v))
+
 #| [Goal0] → Promise Goal1 → DisjV |#
 (struct disj-v (h t))
 (define disj-v-max 16)
+
 #| Goal1 = U Goal0 ConjV DisjV |#
 #| Goal2 = State → Promise (State, Goal1) |#
 #| Goal3 = ((succeed : Goal2), (fail : Goal2)) |#
