@@ -24,6 +24,8 @@
 #| Positive-Integer → Promise a → Sized a |#
 (struct sized (s v))
 
+#| Stream a = U Null (Pairof a (Stream a)) (Promise (Stream a)) |#
+
 #| Stream a |#
 (define stream-nil (delay/name '()))
 
@@ -77,7 +79,7 @@
     (goal0 (sized (foldl + 0 (map (λ (x) (sized-s (goal0-v x))) h))
                   (delay/name
                    (λ (s)
-                     ;;(if
+                     ;;(if  t是Maybe 承诺!
                      (mplus ((foldl dodisj-v->goal0 (car h) (cdr h)) s) ((goal1->goal0 t) s))))))))
 
 #| Goal0 → Goal0 → (State → Stream State) |#
