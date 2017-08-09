@@ -25,7 +25,7 @@
 (define stream-nil (delay/name '()))
 
 #| a → Stream a → Stream a |#
-(define (stream-cons a d) (delay (cons a d)))
+(define (stream-cons a d) (delay/name (cons a d)))
 
 #| (State → Stream State) → Goal0 |#
 (struct goal0 (v))
@@ -41,3 +41,9 @@
 #| Goal2 = State → Promise (State, Goal1) |#
 #| Goal3 = ((succeed : Goal2), (fail : Goal2)) |#
 
+#| Stream a → Stream a → Stream a |#
+(define (mplus xs ys)
+  (cond
+    ((null? xs) ys)
+    ((promise? xs) (delay/name (mplus ys (force xs))))
+    (else (cons (car xs) (mplus (cdr xs) ys)))))
