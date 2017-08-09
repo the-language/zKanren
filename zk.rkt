@@ -21,19 +21,22 @@
 #| Nat → Var |#
 (struct var (v))
 
+#| Positive-Integer → Promise a → Sized a |#
+(struct sized (s v))
+
 #| Stream a |#
 (define stream-nil (delay/name '()))
 
 #| a → Stream a → Stream a |#
 (define (stream-cons a d) (delay/name (cons a d)))
 
-#| (State → Stream State) → Goal0 |#
+#| (Sized (State → Stream State)) → Goal0 |#
 (struct goal0 (v))
 
 #| [Goal0] → ConjV |#
 (struct conj-v (v))
 
-#| [Goal0] → Promise Goal1 → DisjV |#
+#| [Goal0] → Maybe (Promise Goal1) → DisjV |#
 (struct disj-v (h t))
 (define disj-v-max 16)
 
@@ -54,3 +57,24 @@
     ((null? xs) '())
     ((promise? xs) (delay/name (bind (force xs) f)))
     (else (mplus (f (car xs)) (bind (cdr xs) f)))))
+
+#| Goal1 → Goal1 → ConjV |#
+(define (conj g1 g2)
+  (cond
+    ((disj-v? g1) (conj (disj-v->goal0 g1) g2))
+    ((disj-v? g2) (conj g2 g1))
+    ((conj-v? g1) (if (conj-v? g2)
+                      (conj-v (append (conj-v-v g1) (conj-v-v g2)))
+                      (conj-v (cons g2 (conj-v-v g1)))))
+    ((conj-v? g2) (conj-v (cons g1 (conj-v-v g2))))
+    (else (conj-v (list g1 g2)))))
+
+#| DisjV → Goal0 |#
+(define (disj-v->goal0 d)
+  (let ((h (sort (disj-v-h d)
+                 (lambda (x y) (> (sized-s (goal-v x)) (sized-s (goal-v y))))))
+        (t (disj-v-t d)))
+    (goal0 (sized (foldl + 0 (map (λ (x) (sized-s (goal-v x))) h))
+                  (delay/name
+                   (λ (s)
+                     (mplus ((foldl dodisj-v->goal0 (car h) (cdr h)) s) ((goal1->goal0 t) s))))))))
