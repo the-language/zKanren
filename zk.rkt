@@ -31,4 +31,5 @@
 (define disj-v-max 16)
 #| Goal1 = U Goal0 ConjV DisjV |#
 #| Goal2 = State → Promise (State, Goal1) |#
+#| Goal3 = ((succeed : Goal2), (fail : Goal2)) |#
 
