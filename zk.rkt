@@ -76,11 +76,11 @@
   (let ((h (sort (disj-v-h d)
                  >goal0))
         (t (disj-v-t d)))
-    (goal0 (sized (foldl + 0 (map (λ (x) (sized-s (goal0-v x))) h))
+    (goal0 (sized (sum-goal0 h)
                   (delay/name
-                   (λ (s)
-                     ;;(if  t是Maybe 承诺!
-                     (mplus ((foldl dodisj-v->goal0 (car h) (cdr h)) s) ((goal1->goal0 t) s))))))))
+                   (if t
+                       (λ (s) (mplus ((foldl dodisj-v->goal0 (car h) (cdr h)) s) (promise-goal1->stream t s)))
+                       (foldl dodisj-v->goal0 (car h) (cdr h))))))))
 
 #| Goal0 → Goal0 → (State → Stream State) |#
 (define ((dodisj-v->goal0 g1 g2) s)
@@ -94,10 +94,28 @@
     ((conj-v? g) (conj-v->goal0 g))
     (else g)))
 
+#| Promise Goal1 → State → Stream State |#
+(define (promise-goal1->stream g s)
+  (delay/name (delay/name ((force (goal1->goal0 (force (sized-v g)))) s))))
+
 #| Goal0 → Goal0 → Bool |#
 (define (>goal0 x y)
   (> (sized-s (goal0-v x)) (sized-s (goal0-v y))))
 
+#| [Num] → Num |#
+(define (sum xs) (foldl + 0 xs))
+
+#| [Goal0] → Num |#
+(define (sum-goal0 xs) (sum (map (λ (x) (sized-s (goal0-v x))) xs)))
+
 #| ConjV → Goal0 |#
 (define (conj-v->goal0 g)
-  (let ((gs (sort (conj-v-v g) >goal0))) (error "conj-v->goal0")))
+  (let ((gs (sort (conj-v-v g) >goal0)))
+    (goal0 (sized
+            (sum-goal0 gs)
+            (delay/name (foldl doconj-v->goal0 (car gs) (cdr gs)))))))
+
+#| Goal0 → Goal0 → (State → Stream State) |#
+(define ((doconj-v->goal0 g1 g2) s)
+  (bind ((force (sized-v (goal0-v g1))) s)
+        (force (sized-v (goal0-v g2)))))
