@@ -119,3 +119,7 @@
 (define ((doconj-v->goal0 g1 g2) s)
   (bind ((force (sized-v (goal0-v g1))) s)
         (force (sized-v (goal0-v g2)))))
+
+#| Goal3 → Goal3 |#
+(define (noto g)
+  (cons (cdr g) (car g)))
