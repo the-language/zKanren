@@ -125,3 +125,25 @@
   (cons (cdr g) (car g)))
 
 #| State = ((s : Hash Var Any), (((d : Hash Var [Any]), (c : [Constraint]))) |#
+
+#| Goal1 → Promise DisjV → Goal1 |#
+(define (cons-promise-disj a d)
+  (cond
+    ((disj-v? a) (append-disj a d))
+    ((conj-v? a) (append-disj (force d)
+                              (delay/name
+                               (disj-v (list (conj-v->goal0 a))
+                                       #f))))))
+
+#| DisjV → Promise DisjV → DisjV |#
+(define (append-disj g pg)
+  (if (>= (length (disj-v-h g)) disj-v-max)
+      (disj-v (disj-v-h g)
+              (if (disj-v-t g)
+                  (delay/name (cons-promise-disj (force (disj-v-t g)) pg))
+                  pg))
+      (let ((g2 (force pg)))
+        (let loop ((xs (disj-v-h g)) (ys (disj-v-h g2)))
+          (cond
+            ((null? ys) (error 'append-disj ""))
+            (else (error 'append-disj "")))))))
