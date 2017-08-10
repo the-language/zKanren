@@ -24,7 +24,7 @@
 #| Positive-Integer → Promise a → Sized a |#
 (struct sized (s v))
 
-#| Stream a = U Null (Pairof a (Stream a)) (Promise (Stream a)) |#
+#| Stream a = U Null (a, (Stream a)) (Promise (Stream a)) |#
 
 #| Stream a |#
 (define stream-nil (delay/name '()))
@@ -123,3 +123,5 @@
 #| Goal3 → Goal3 |#
 (define (noto g)
   (cons (cdr g) (car g)))
+
+#| State = ((s : Hash Var Any), (((d : Hash Var [Any]), (c : [Constraint]))) |#
