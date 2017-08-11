@@ -160,3 +160,10 @@
           (if t
               (append-disj h t)
               h)))))
+
+#| (Goal1 → Goal1 → Goal1) → (Goal2 → Goal2 → Goal2) |#
+(define (((liftgoal1->goal2 f) g1 g2) s)
+  (delay/name (let ([g1r (force (g1 s))])
+                (let ([g2r (force (g2 (car g1r)))] [g1 (cdr g1r)])
+                  (let ([g2 (cdr g2r)] [s (car g2r)])
+                    (cons s (f g1 g2)))))))
