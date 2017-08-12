@@ -167,3 +167,6 @@
                 (let ([g2r (force (g2 (car g1r)))] [g1 (cdr g1r)])
                   (let ([g2 (cdr g2r)] [s (car g2r)])
                     (cons s (f g1 g2)))))))
+
+#| Goal2 → Goal2 → Goal2 |#
+(define conj+ (liftgoal1->goal2 conj))
