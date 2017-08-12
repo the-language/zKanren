@@ -38,7 +38,7 @@
 #| [Goal0] → ConjV |#
 (struct conj-v (v))
 
-#| [Goal0] → Maybe (Promise DisjV) → DisjV |#
+#| [Goal0] → Maybe (Promise DisjV) → DisjV |# ;改成[Goal0] → Maybe (Promise Goal2) → DisjV
 (struct disj-v (h t))
 (define disj-v-max 16)
 
@@ -186,3 +186,23 @@
               ((conj-v? g2) (cons-disj g g2))
               ((disj-v? g2) (disj-v (list g (conj-v->goal0 g2)) #f))
               (else (disj-v (list g g2) #f)))))))
+
+#| Goal2 → (State → Stream State) |#
+(define ((goal2->goal g) s)
+  (let ([gr (force (g s))])
+    (let ([s (car gr)] [g (cdr gr)])
+      (delay/name (sized-v (goal1->goal0 g))))))
+
+#| Goal2 → Goal2 → Goal2 |#
+(define ((disj+ g1 g2) s)
+  (delay/name (let ([g1r (force (g1 s))])
+                (let ([s (car g1r)] [g1 (cdr g1r)])
+                  (cond
+                    ((conj-v? g1) (let ([g1 (conj-v->goal0 g1)] [g2r (force (g2 s))])
+                                    (let ([s (car g2r)] [g2 (cdr g2)])
+                                      (cons s (cond
+                                                ((conj-v? g2) (disj-v (list g1 (conj-v->goal0 g2)) #f))
+                                                ((disj-v? g2) (cons-disj g1 g2))
+                                                (else (disj-v (list g1 g2) #f)))))))
+                    ((disj-v? g1) (if (disj-v-t g1)
+
