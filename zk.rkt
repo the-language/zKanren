@@ -131,15 +131,9 @@
     (g2 g2)
     (else #f)))
 
-#| [Goal0] → DisjV |#
-(define-syntax disj
-  (syntax-rules ()
-    ((_ e) (disj-v (list e) #f))
-    ((_ e es ...) (cons-disj e (delay/name (disj es ...))))))
-
-#| Goal0 → Promise DisjV → DisjV |#
+#| Goal0 → DisjV → DisjV |#
 (define-syntax-rule (cons-disj g d)
-  (append-disj (disj g) d))
+  (append-disj (disj-v g #f) (delay/name d)))
 
 #| [Goal0] → DisjV |#
 (define (disjf xs)
@@ -170,3 +164,25 @@
 
 #| Goal2 → Goal2 → Goal2 |#
 (define conj+ (liftgoal1->goal2 conj))
+
+#| Goal1 → Promise Goal1 → DisjV |#
+(define (disj g pg)
+  (cond
+    ((conj-v? g) (disj (conj-v->goal0 g) pg))
+    ((disj-v? g) (if (disj-v-t g)
+                     (disj-v (disj-v-h g) (delay/name
+                                           (let ([g2 (force pg)])
+                                             (cond
+                                               ((conj-v? g2) (cons-disj (conj-v->goal0 g2) (force (disj-v-t g))))
+                                               ((disj-v? g2) (append-disj g2 (disj-v-t g)))
+                                               (else (cons-disj g2 (force (disj-v-t g))))))))
+                     (let ([g2 (force pg)])
+                       (cond
+                         ((conj-v? g2) (cons-disj (conj-v->goal0 g2) g))
+                         ((disj-v? g2) (append-disj g (delay/name g2)))
+                         (else (cons-disj g2 g))))))
+    (else (let ([g2 (force pg)])
+            (cond
+              ((conj-v? g2) (cons-disj g g2))
+              ((disj-v? g2) (disj-v (list g (conj-v->goal0 g2)) #f))
+              (else (disj-v (list g g2) #f)))))))
