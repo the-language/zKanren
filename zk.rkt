@@ -119,7 +119,7 @@
                     (cons s (f g1 g2)))))))
 
 #| Goal2 → Goal2 → Goal2 |#
-(define conj+ (liftgoal1->goal2 conj))
+(define conj2 (liftgoal1->goal2 conj))
 
 #| Goal2 → (State → Stream State) |#
 (define ((goal2->goal g) s)
@@ -152,3 +152,70 @@
   (if (sdisj-v? g)
       (sdisj-v->goal0 g)
       (ldisj-v->goal0 g)))
+
+#| Goal1 → Goal2 |#
+(define-syntax-rule (goal1->goal2 g) (λ (s) (delay/name (cons s g))))
+
+#| SDisjV → DisjV |#
+(define (sdisj-v-check g)
+  (if (> (length (sdisj-v-v g)) disj-v-max)
+      (let-values ([(h t) (split-at (sdisj-v-v g) disj-v-max)])
+        (ldisj-v (sdisj-v->goal0 (sdisj-v h)) (goal1->goal2 (sdisj-v t))))
+      g))
+
+#| Promise Goal0 → DisjV → DisjV |#
+(define (cons-disj g d)
+  (if (sdisj-v? d)
+      (sdisj-v-check (sdisj-v (cons (force g) (sdisj-v-v d))))
+      (ldisj-v (ldisj-v-h d) (disj2 (goal1->goal2 (force g)) (ldisj-v-t d)))))
+
+#| Goal1 → Promise Goal1 → DisjV |#
+(define (disj g1 g2)
+  (cond
+    ((conj-v? g1) (disj (conj-v->goal0 g1) g2))
+    ((sdisj-v? g1) (let ([g2 (force g2)])
+                     (cond
+                       ((conj-v? g2) (sdisj-v-check (sdisj-v (cons (conj-v->goal0 g2) (sdisj-v-v g1)))))
+                       ((disj-v? g2) (append-disj-v g1 (delay/name g2)))
+                       (else (sdisj-v-check (sdisj-v (cons g2 (sdisj-v-v g1))))))))
+    ((ldisj-v? g1) (cons-disj1 g2 g1))
+    (else (let ([g2 (force g2)])
+            (cond
+              ((conj-v? g2) (sdisj-v-check (sdisj-v (list g1 (conj-v->goal0 g2)))))
+              ((disj-v? g2) (cons-disj (delay/name g1) g2))
+              (else (sdisj-v-check (sdisj-v (list g1 g2)))))))))
+
+#| Promise Goal1 → DisjV → DisjV |#
+(define (cons-disj1 g d)
+  (if (sdisj-v? d)
+      (let ([g (force g)])
+        (cond
+          ((conj-v? g) (sdisj-v-check (sdisj-v (cons (conj-v->goal0 g) (sdisj-v-v d)))))
+          ((disj-v? g) (append-disj-v d (delay/name g)))
+          (else (sdisj-v-check (sdisj-v (cons g (sdisj-v-v d)))))))
+      (ldisj-v (ldisj-v-h d) (disj2 (goal1->goal2 g) (ldisj-v-t d)))))
+
+#| Goal2 → Promise Goal2 → Goal2 |#
+(define ((disj2 g1 g2) s)
+  (delay/name (let ([g1r (force (g1 s))])
+                (let ([s (car g1r)] [g1 (cdr g1r)])
+                  (cond
+                    ((conj-v? g1) (let ([g2r (force ((force g2) s))])
+                                    (let ([s (car g2r)] [g2 (cdr g2r)])
+                                      (cons s (disj g2 (delay/name (conj-v->goal0 g1)))))))
+                    ((sdisj-v? g1) (let ([g2r (force ((force g2) s))])
+                                     (let ([s (car g2r)] [g2 (cdr g2r)])
+                                       (cons s (disj g1 (delay/name g2))))))
+                    ((ldisj-v? g1) (cons s (disj g1 (delay/name (goal0 (sized 9 (delay/name (goal2->goal (force g2)))))))))
+                    (else (let ([g2r (force ((force g2) s))])
+                            (let ([s (car g2r)] [g2 (cdr g2r)])
+                              (cons s (disj g2 (delay/name g1)))))))))))
+
+#| DisjV → Promise DisjV → DisjV |#
+(define (append-disj-v d pd)
+  (if (sdisj-v? d)
+      (let ([pd (force pd)])
+        (if (sdisj-v? pd)
+            (sdisj-v-check (sdisj-v (append (sdisj-v-v d) (sdisj-v-v pd))))
+            (ldisj-v (ldisj-v-h pd) (delay/name (disj2 (goal1->goal2 d) (ldisj-v-t pd))))))
+      (ldisj-v (ldisj-v-h d) (delay/name (disj2 (goal1->goal2 d) pd)))))
