@@ -238,3 +238,8 @@
 (define ((call/fresh2 f) s)
   (let ([v (state-v s)])
     ((f (var v)) (state (state-s s) (state-d s) (state-c s) (+ 1 v)))))
+
+#| (Var → Goal3) → Goal3 |#
+(define (call/fresh f)
+  (cons (delay/name (call/fresh2 (λ (v) (force (car (f v))))))
+        (delay/name (call/fresh2 (λ (v) (force (cdr (f v))))))))
