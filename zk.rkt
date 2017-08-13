@@ -109,8 +109,6 @@
 (define (noto g)
   (cons (cdr g) (car g)))
 
-#| State = ((s : Hash Var Any), (((d : Hash Var [Any]), (c : [Constraint]))) |#
-
 #| (Goal1 → Goal1 → Goal1) → (Goal2 → Goal2 → Goal2) |#
 (define (((liftgoal1->goal2 f) g1 g2) s)
   (delay/name (let ([g1r (force (g1 s))])
@@ -229,3 +227,14 @@
 (define (conj3 g1 g2)
   (cons (delay/name (conj2 (force (car g1)) (force (car g2))))
         (delay/name (disj2 (force (cdr g1)) (cdr g1)))))
+
+#| (s : Hash Var Any) → (d : Hash Var [Any]) → (c : [Constraint]) → (v : Nat) → State |#
+(struct state (s d c v))
+
+#| State |#
+(define empty-s (state (make-immutable-hash) (make-immutable-hash) '() 0))
+
+#| (Var → Goal2) → Goal2 |#
+(define ((call/fresh2 f) s)
+  (let ([v (state-v s)])
+    ((f (var v)) (state (state-s s) (state-d s) (state-c s) (+ 1 v)))))
