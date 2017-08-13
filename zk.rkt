@@ -49,7 +49,7 @@
 
 #| Goal1 = U Goal0 ConjV DisjV |#
 #| Goal2 = State → Promise (State, Goal1) |#
-#| Goal3 = ((succeed : Goal2), (fail : Goal2)) |#
+#| Goal3 = ((succeed : Promise Goal2), (fail : Promise Goal2)) |#
 
 #| Stream a → Stream a → Stream a |#
 (define (mplus xs ys)
@@ -219,3 +219,13 @@
             (sdisj-v-check (sdisj-v (append (sdisj-v-v d) (sdisj-v-v pd))))
             (ldisj-v (ldisj-v-h pd) (delay/name (disj2 (goal1->goal2 d) (ldisj-v-t pd))))))
       (ldisj-v (ldisj-v-h d) (delay/name (disj2 (goal1->goal2 d) pd)))))
+
+#| Goal3 → Goal3 → Goal3 |#
+(define (disj3 g1 g2)
+  (cons (delay/name (disj2 (force (car g1)) (car g1)))
+        (delay/name (conj2 (force (cdr g1)) (force (cdr g2))))))
+
+#| Goal3 → Goal3 → Goal3 |#
+(define (conj3 g1 g2)
+  (cons (delay/name (conj2 (force (car g1)) (force (car g2))))
+        (delay/name (disj2 (force (cdr g1)) (cdr g1)))))
