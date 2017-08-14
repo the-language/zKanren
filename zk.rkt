@@ -66,10 +66,10 @@
     (else (mplus (f (car xs)) (bind (cdr xs) f)))))
 
 #| Goal1 → Goal1 → ConjV |#
-(define (conj g1 g2)
+(define (conj1 g1 g2)
   (cond
-    ((disj-v? g1) (conj (disj-v->goal0 g1) g2))
-    ((disj-v? g2) (conj g2 g1))
+    ((disj-v? g1) (conj1 (disj-v->goal0 g1) g2))
+    ((disj-v? g2) (conj1 g2 g1))
     ((conj-v? g1) (if (conj-v? g2)
                       (conj-v (append (conj-v-v g1) (conj-v-v g2)))
                       (conj-v (cons g2 (conj-v-v g1)))))
@@ -95,15 +95,13 @@
 
 #| ConjV → Goal0 |#
 (define (conj-v->goal0 g)
-  (let ((gs (sort (conj-v-v g) >goal0)))
-    (goal0 (sized
-            (sum-goal0 gs)
-            (delay/name (foldl doconj-v->goal0 (car gs) (cdr gs)))))))
+  (let ([gs (sort (conj-v-v g) >goal0)])
+    (foldl conj- (car gs) (cdr gs))))
 
-#| Goal0 → Goal0 → (State → Stream State) |#
-(define ((doconj-v->goal0 g1 g2) s)
-  (bind ((force (sized-v (goal0-v g1))) s)
-        (force (sized-v (goal0-v g2)))))
+#| Goal0 → Goal0 → Goal0 |#
+(define (conj- g1 g2)
+  (let ([g1 (goal0-v g1)] [g2 (goal0-v g2)])
+    (goal0 (+ (sized-s g1) (sized-s g2)) (delay/name (λ (s) (bind ((force (sized-v g1)) s) (force (sized-v g2))))))))
 
 #| Goal3 → Goal3 |#
 (define (noto g)
@@ -117,7 +115,7 @@
                     (cons s (f g1 g2)))))))
 
 #| Goal2 → Goal2 → Goal2 |#
-(define conj2 (liftgoal1->goal2 conj))
+(define conj2 (liftgoal1->goal2 conj1))
 
 #| Goal2 → (State → Stream State) |#
 (define ((goal2->goal g) s)
@@ -129,7 +127,7 @@
 #| Goal0 → Goal0 → Goal0 |#
 (define (disj- g1 g2)
   (let ([g1 (goal0-v g1)] [g2 (goal0-v g2)])
-    (goal0 (+ (sized-s g1) (sized-s g2)) (delay/name (λ (s) (mplus ((force g1) s) ((force g2) s)))))))
+    (goal0 (+ (sized-s g1) (sized-s g2)) (delay/name (λ (s) (mplus ((force (sized-v g1)) s) ((force (sized-v g2)) s)))))))
 
 #| SDisjV → Goal0 |#
 (define (sdisj-v->goal0 g)
@@ -168,9 +166,9 @@
       (ldisj-v (ldisj-v-h d) (disj2 (goal1->goal2 (force g)) (ldisj-v-t d)))))
 
 #| Goal1 → Promise Goal1 → DisjV |#
-(define (disj g1 g2)
+(define (disj1 g1 g2)
   (cond
-    ((conj-v? g1) (disj (conj-v->goal0 g1) g2))
+    ((conj-v? g1) (disj1 (conj-v->goal0 g1) g2))
     ((sdisj-v? g1) (let ([g2 (force g2)])
                      (cond
                        ((conj-v? g2) (sdisj-v-check (sdisj-v (cons (conj-v->goal0 g2) (sdisj-v-v g1)))))
@@ -200,14 +198,14 @@
                   (cond
                     ((conj-v? g1) (let ([g2r (force ((force g2) s))])
                                     (let ([s (car g2r)] [g2 (cdr g2r)])
-                                      (cons s (disj g2 (delay/name (conj-v->goal0 g1)))))))
+                                      (cons s (disj1 g2 (delay/name (conj-v->goal0 g1)))))))
                     ((sdisj-v? g1) (let ([g2r (force ((force g2) s))])
                                      (let ([s (car g2r)] [g2 (cdr g2r)])
-                                       (cons s (disj g1 (delay/name g2))))))
-                    ((ldisj-v? g1) (cons s (disj g1 (delay/name (goal0 (sized 9 (delay/name (goal2->goal (force g2)))))))))
+                                       (cons s (disj1 g1 (delay/name g2))))))
+                    ((ldisj-v? g1) (cons s (disj1 g1 (delay/name (goal0 (sized 9 (delay/name (goal2->goal (force g2)))))))))
                     (else (let ([g2r (force ((force g2) s))])
                             (let ([s (car g2r)] [g2 (cdr g2r)])
-                              (cons s (disj g2 (delay/name g1)))))))))))
+                              (cons s (disj1 g2 (delay/name g1)))))))))))
 
 #| DisjV → Promise DisjV → DisjV |#
 (define (append-disj-v d pd)
@@ -219,12 +217,12 @@
       (ldisj-v (ldisj-v-h d) (delay/name (disj2 (goal1->goal2 d) pd)))))
 
 #| Goal3 → Goal3 → Goal3 |#
-(define (disj3 g1 g2)
+(define (disj g1 g2)
   (cons (delay/name (disj2 (force (car g1)) (car g1)))
         (delay/name (conj2 (force (cdr g1)) (force (cdr g2))))))
 
 #| Goal3 → Goal3 → Goal3 |#
-(define (conj3 g1 g2)
+(define (conj g1 g2)
   (cons (delay/name (conj2 (force (car g1)) (force (car g2))))
         (delay/name (disj2 (force (cdr g1)) (cdr g1)))))
 
