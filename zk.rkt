@@ -239,3 +239,8 @@
     ((_ g0 g ...) (disj g0 (delay (all g ...))))))
 
 (define-syntax-rule (conde (g0 g ...) ...) (disj+ (all g0 g ...) ...))
+
+(define-syntax fresh
+  (syntax-rules ()
+    ((_ () g0 g ...) (all g0 g ...))
+    ((_ (x0 x ...) g0 g ...) (call/fresh (λ (x0) (fresh (x ...) g0 g ...))))))
