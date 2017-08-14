@@ -227,3 +227,7 @@
 (define (call/fresh f)
   (cons (delay/name (call/fresh2 (λ (v) (force (car (f v))))))
         (delay/name (call/fresh2 (λ (v) (force (cdr (f v))))))))
+
+#| Goal3... → Goal3 |#
+(define (all . gs)
+  (foldl conj (car gs) (cdr gs)))
