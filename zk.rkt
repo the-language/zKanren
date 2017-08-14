@@ -247,3 +247,19 @@
 
 #| Stream a → (a, Stream a) |#
 (define (pull xs) (if (promise? xs) (pull (force xs)) xs))
+
+#| Positive-Integer → Stream a → [a] |#
+(define (take-stream n xs)
+  (if (zero? n)
+      '()
+      (let ([xs (pull xs)])
+        (if (null? xs)
+            '()
+            (cons (car xs) (take (- n 1) (cdr xs)))))))
+
+#| Stream a → [a] |#
+(define (force-stream xs)
+  (let ([xs (pull xs)])
+    (if (null? xs)
+        '()
+        (cons (car xs) (force-stream (cdr xs))))))
