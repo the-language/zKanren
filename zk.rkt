@@ -202,15 +202,13 @@
             (ldisj-v (ldisj-v-h pd) (delay/name (disj2 (goal1->goal2 d) (ldisj-v-t pd))))))
       (ldisj-v (ldisj-v-h d) (delay/name (disj2 (goal1->goal2 d) pd)))))
 
-#| Goal3 → Goal3 → Goal3 |#
+#| Goal3 → Promise Goal3 → Goal3 |#
 (define (disj g1 g2)
-  (cons (delay/name (disj2 (force (car g1)) (car g1)))
-        (delay/name (conj2 (force (cdr g1)) (force (cdr g2))))))
+  (cons (delay/name (disj2 (force (car g1)) (delay/name (force (car (force g2))))))
+        (delay/name (conj2 (force (cdr g1)) (force (cdr (force g2)))))))
 
-#| Goal3 → Goal3 → Goal3 |#
-(define (conj g1 g2)
-  (cons (delay/name (conj2 (force (car g1)) (force (car g2))))
-        (delay/name (disj2 (force (cdr g1)) (cdr g1)))))
+#| Goal3 → Promise Goal3 → Goal3 |#
+(define (conj g1 g2) (noto (disj g1 g2)))
 
 #| (s : Hash Var Any) → (d : Hash Var [Any]) → (c : [Constraint]) → (v : Nat) → State |#
 (struct state (s d c v))
@@ -228,6 +226,16 @@
   (cons (delay/name (call/fresh2 (λ (v) (force (car (f v))))))
         (delay/name (call/fresh2 (λ (v) (force (cdr (f v))))))))
 
-#| Goal3... → Goal3 |#
-(define (all . gs)
-  (foldl conj (car gs) (cdr gs)))
+#| Goal3 ... → Goal3 |#
+(define-syntax all
+  (syntax-rules ()
+    ((_ g) g)
+    ((_ g0 g ...) (conj g0 (delay (all g ...))))))
+
+#| Goal3 ... → Goal3 |#
+(define disj+
+  (syntax-rules ()
+    ((_ g) g)
+    ((_ g0 g ...) (disj g0 (delay (all g ...))))))
+
+(define-syntax-rule (conde (g0 g ...) ...) (disj+ (all g0 g ...) ...))
