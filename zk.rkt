@@ -21,7 +21,7 @@
 #| Positive-Integer → Promise a → Sized a |#
 (struct sized (s v))
 
-#| Stream a = U Null (a, (Stream a)) (Promise (Stream a)) |#
+#| Stream a = U () (a, (Stream a)) (Promise (Stream a)) |#
 
 #| Stream a |#
 (define stream-nil (delay/name '()))
@@ -244,3 +244,6 @@
   (syntax-rules ()
     ((_ () g0 g ...) (all g0 g ...))
     ((_ (x0 x ...) g0 g ...) (call/fresh (λ (x0) (fresh (x ...) g0 g ...))))))
+
+#| Stream a → (a, Stream a) |#
+(define (pull xs) (if (promise? xs) (pull (force xs)) xs))
