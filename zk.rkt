@@ -15,9 +15,6 @@
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
 
-#| a → a |#
-(define (id x) x)
-
 #| Nat → Var |#
 (struct var (v))
 
@@ -86,12 +83,6 @@
 #| Goal0 → Goal0 → Bool |#
 (define (>goal0 x y)
   (> (sized-s (goal0-v x)) (sized-s (goal0-v y))))
-
-#| [Num] → Num |#
-(define (sum xs) (foldl + 0 xs))
-
-#| [Goal0] → Num |#
-(define (sum-goal0 xs) (sum (map (λ (x) (sized-s (goal0-v x))) xs)))
 
 #| ConjV → Goal0 |#
 (define (conj-v->goal0 g)
