@@ -263,3 +263,6 @@
     (if (null? xs)
         '()
         (cons (car xs) (force-stream (cdr xs))))))
+
+#| a → Hash a a → a |#
+(define (walk x h) (hash-ref h x x))
