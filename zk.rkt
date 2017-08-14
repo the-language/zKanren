@@ -160,12 +160,7 @@
 (define (disj1 g1 g2)
   (cond
     ((conj-v? g1) (disj1 (conj-v->goal0 g1) g2))
-    ((sdisj-v? g1) (let ([g2 (force g2)])
-                     (cond
-                       ((conj-v? g2) (sdisj-v-check (sdisj-v (cons (conj-v->goal0 g2) (sdisj-v-v g1)))))
-                       ((disj-v? g2) (append-disj-v g1 (delay/name g2)))
-                       (else (sdisj-v-check (sdisj-v (cons g2 (sdisj-v-v g1))))))))
-    ((ldisj-v? g1) (cons-disj1 g2 g1))
+    ((disj-v? g1) (cons-disj1 g2 g1))
     (else (let ([g2 (force g2)])
             (cond
               ((conj-v? g2) (sdisj-v-check (sdisj-v (list g1 (conj-v->goal0 g2)))))
