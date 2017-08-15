@@ -251,3 +251,15 @@
 (define fail (noto succeed))
 
 (define == (error '==))
+
+#| (State → Maybe State) → Symbol → [Any] → [Var] → Constraint |#
+(struct constraint (add kind parm vars))
+
+#| [Var] → State → Maybe State |#
+(define (check-constraints vs s)
+  (let-values ([(ca cb) (partition (λ (c) (ormap (λ (x) (member x (constraint-vars c))) vs)) (state-c s))])
+    (let loop ([cs ca] [s (state (state-s s) (state-d s) cb)])
+      (cond
+        ((null? cs) s)
+        (((constraint-add (car cs)) s) => (λ (s) (loop (cdr cs) s)))
+        (else #f)))))
