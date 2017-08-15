@@ -68,6 +68,10 @@
         (ldisj-v (sdisj-v->goal0 (sdisj-v h)) (goal1->goal2 (sdisj-v t))))
       g))
 
+#| [Goal0] → DisjV |#
+(define (sdisj-v-c gs)
+  (sdisj-v-check (sdisj-v gs)))
+
 #| Goal = State → Stream State |#
 #| Goal1 = U Goal0 ConjV DisjV |#
 #| Goal2 = State → Promise (State, Goal1) |#
@@ -124,7 +128,7 @@
 #| Promise Goal0 → DisjV → DisjV |#
 (define (cons-disj g d)
   (if (sdisj-v? d)
-      (sdisj-v-check (sdisj-v (cons (force g) (sdisj-v-v d))))
+      (sdisj-v-c (cons (force g) (sdisj-v-v d)))
       (ldisj-v (ldisj-v-h d) (disj2 (goal1->goal2 (force g)) (ldisj-v-t d)))))
 
 #| DisjV → Promise DisjV → DisjV |#
@@ -132,7 +136,7 @@
   (if (sdisj-v? d)
       (let ([pd (force pd)])
         (if (sdisj-v? pd)
-            (sdisj-v-check (sdisj-v (append (sdisj-v-v d) (sdisj-v-v pd))))
+            (sdisj-v-c (append (sdisj-v-v d) (sdisj-v-v pd)))
             (ldisj-v (ldisj-v-h pd) (delay/name (disj2 (goal1->goal2 d) (ldisj-v-t pd))))))
       (ldisj-v (ldisj-v-h d) (delay/name (disj2 (goal1->goal2 d) pd)))))
 
@@ -141,9 +145,9 @@
   (if (sdisj-v? d)
       (let ([g (force g)])
         (cond
-          ((conj-v? g) (sdisj-v-check (sdisj-v (cons (conj-v->goal0 g) (sdisj-v-v d)))))
+          ((conj-v? g) (sdisj-v-c (cons (conj-v->goal0 g) (sdisj-v-v d))))
           ((disj-v? g) (append-disj-v d (delay/name g)))
-          (else (sdisj-v-check (sdisj-v (cons g (sdisj-v-v d)))))))
+          (else (sdisj-v-c (cons g (sdisj-v-v d))))))
       (ldisj-v (ldisj-v-h d) (disj2 (goal1->goal2 g) (ldisj-v-t d)))))
 
 #| Goal1 → Promise Goal1 → DisjV |#
@@ -153,9 +157,9 @@
     ((disj-v? g1) (cons-disj1 g2 g1))
     (else (let ([g2 (force g2)])
             (cond
-              ((conj-v? g2) (sdisj-v-check (sdisj-v (list g1 (conj-v->goal0 g2)))))
+              ((conj-v? g2) (sdisj-v-c (list g1 (conj-v->goal0 g2))))
               ((disj-v? g2) (cons-disj (delay/name g1) g2))
-              (else (sdisj-v-check (sdisj-v (list g1 g2)))))))))
+              (else (sdisj-v-c (list g1 g2))))))))
 
 #| ConjV → Goal0 |#
 (define (conj-v->goal0 g)
