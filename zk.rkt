@@ -22,15 +22,32 @@
 (struct sized (s v))
 
 #| Stream a = U () (a, (Stream a)) (Promise (Stream a)) |#
-
-#| Stream a |#
-(define stream-nil (delay/name '()))
-
 #| a → Stream a → Stream a |#
 (define (stream-cons a d) (delay/name (cons a d)))
+#| Stream a → (a, Stream a) |#
+(define (pull xs) (if (promise? xs) (pull (force xs)) xs))
+#| Positive-Integer → Stream a → [a] |#
+(define (take-stream n xs)
+  (if (zero? n)
+      '()
+      (let ([xs (pull xs)])
+        (if (null? xs)
+            '()
+            (cons (car xs) (take (- n 1) (cdr xs)))))))
+#| Stream a → [a] |#
+(define (force-stream xs)
+  (let ([xs (pull xs)])
+    (if (null? xs)
+        '()
+        (cons (car xs) (force-stream (cdr xs))))))
+
 
 #| (Sized Goal) → Goal0 |#
 (struct goal0 (v))
+
+#| Goal0 → Goal0 → Bool |#
+(define (>goal0 x y)
+  (> (sized-s (goal0-v x)) (sized-s (goal0-v y))))
 
 #| [Goal0] → ConjV |#
 (struct conj-v (v))
@@ -44,10 +61,24 @@
 (define (disj-v? x) (or (sdisj-v? x) (ldisj-v? x)))
 #| DisjV = U SDisjV LDisjV |#
 
+#| SDisjV → DisjV |#
+(define (sdisj-v-check g)
+  (if (> (length (sdisj-v-v g)) disj-v-max)
+      (let-values ([(h t) (split-at (sdisj-v-v g) disj-v-max)])
+        (ldisj-v (sdisj-v->goal0 (sdisj-v h)) (goal1->goal2 (sdisj-v t))))
+      g))
+
 #| Goal = State → Stream State |#
 #| Goal1 = U Goal0 ConjV DisjV |#
 #| Goal2 = State → Promise (State, Goal1) |#
 #| Goal3 = ((succeed : Promise Goal2), (fail : Promise Goal2)) |#
+
+#| Goal3 → Goal3 |#
+(define (noto g)
+  (cons (cdr g) (car g)))
+
+#| Goal1 → Goal2 |#
+(define-syntax-rule (goal1->goal2 g) (λ (s) (delay/name (cons s g))))
 
 #| Stream a → Stream a → Stream a |#
 (define (mplus xs ys)
@@ -63,6 +94,22 @@
     ((promise? xs) (delay/name (bind (force xs) f)))
     (else (mplus (f (car xs)) (bind (cdr xs) f)))))
 
+#| Goal0 → Goal0 → Goal0 |#
+(define (conj0 g1 g2)
+  (let ([g1 (goal0-v g1)] [g2 (goal0-v g2)])
+    (goal0 (+ (sized-s g1) (sized-s g2)) (delay/name (λ (s) (bind ((force (sized-v g1)) s) (force (sized-v g2))))))))
+
+#| DisjV → Goal0 |#
+(define (disj-v->goal0 g)
+  (if (sdisj-v? g)
+      (sdisj-v->goal0 g)
+      (ldisj-v->goal0 g)))
+
+#| Goal0 → Goal0 → Goal0 |#
+(define (disj0 g1 g2)
+  (let ([g1 (goal0-v g1)] [g2 (goal0-v g2)])
+    (goal0 (+ (sized-s g1) (sized-s g2)) (delay/name (λ (s) (mplus ((force (sized-v g1)) s) ((force (sized-v g2)) s)))))))
+
 #| Goal1 → Goal1 → ConjV |#
 (define (conj1 g1 g2)
   (cond
@@ -74,52 +121,46 @@
     ((conj-v? g2) (conj-v (cons g1 (conj-v-v g2))))
     (else (conj-v (list g1 g2)))))
 
-#| Goal1 → Goal0 |#
-(define (goal1->goal0 g)
-  (cond
-    ((disj-v? g) (disj-v->goal0 g))
-    ((conj-v? g) (conj-v->goal0 g))
-    (else g)))
+#| Promise Goal0 → DisjV → DisjV |#
+(define (cons-disj g d)
+  (if (sdisj-v? d)
+      (sdisj-v-check (sdisj-v (cons (force g) (sdisj-v-v d))))
+      (ldisj-v (ldisj-v-h d) (disj2 (goal1->goal2 (force g)) (ldisj-v-t d)))))
 
-#| Goal0 → Goal0 → Bool |#
-(define (>goal0 x y)
-  (> (sized-s (goal0-v x)) (sized-s (goal0-v y))))
+#| DisjV → Promise DisjV → DisjV |#
+(define (append-disj-v d pd)
+  (if (sdisj-v? d)
+      (let ([pd (force pd)])
+        (if (sdisj-v? pd)
+            (sdisj-v-check (sdisj-v (append (sdisj-v-v d) (sdisj-v-v pd))))
+            (ldisj-v (ldisj-v-h pd) (delay/name (disj2 (goal1->goal2 d) (ldisj-v-t pd))))))
+      (ldisj-v (ldisj-v-h d) (delay/name (disj2 (goal1->goal2 d) pd)))))
+
+#| Promise Goal1 → DisjV → DisjV |#
+(define (cons-disj1 g d)
+  (if (sdisj-v? d)
+      (let ([g (force g)])
+        (cond
+          ((conj-v? g) (sdisj-v-check (sdisj-v (cons (conj-v->goal0 g) (sdisj-v-v d)))))
+          ((disj-v? g) (append-disj-v d (delay/name g)))
+          (else (sdisj-v-check (sdisj-v (cons g (sdisj-v-v d)))))))
+      (ldisj-v (ldisj-v-h d) (disj2 (goal1->goal2 g) (ldisj-v-t d)))))
+
+#| Goal1 → Promise Goal1 → DisjV |#
+(define (disj1 g1 g2)
+  (cond
+    ((conj-v? g1) (disj1 (conj-v->goal0 g1) g2))
+    ((disj-v? g1) (cons-disj1 g2 g1))
+    (else (let ([g2 (force g2)])
+            (cond
+              ((conj-v? g2) (sdisj-v-check (sdisj-v (list g1 (conj-v->goal0 g2)))))
+              ((disj-v? g2) (cons-disj (delay/name g1) g2))
+              (else (sdisj-v-check (sdisj-v (list g1 g2)))))))))
 
 #| ConjV → Goal0 |#
 (define (conj-v->goal0 g)
   (let ([gs (sort (conj-v-v g) >goal0)])
     (foldl conj0 (car gs) (cdr gs))))
-
-#| Goal0 → Goal0 → Goal0 |#
-(define (conj0 g1 g2)
-  (let ([g1 (goal0-v g1)] [g2 (goal0-v g2)])
-    (goal0 (+ (sized-s g1) (sized-s g2)) (delay/name (λ (s) (bind ((force (sized-v g1)) s) (force (sized-v g2))))))))
-
-#| Goal3 → Goal3 |#
-(define (noto g)
-  (cons (cdr g) (car g)))
-
-#| (Goal1 → Goal1 → Goal1) → (Goal2 → Goal2 → Goal2) |#
-(define (((liftgoal1->goal2 f) g1 g2) s)
-  (delay/name (let ([g1r (force (g1 s))])
-                (let ([g2r (force (g2 (car g1r)))] [g1 (cdr g1r)])
-                  (let ([g2 (cdr g2r)] [s (car g2r)])
-                    (cons s (f g1 g2)))))))
-
-#| Goal2 → Goal2 → Goal2 |#
-(define conj2 (liftgoal1->goal2 conj1))
-
-#| Goal2 → Goal |#
-(define ((goal2->goal g) s)
-  (delay/name (delay/name (delay/name
-                           (let ([gr (force (g s))])
-                             (let ([s (car gr)] [g (cdr gr)])
-                               ((force (sized-v (goal0-v (goal1->goal0 g)))) s)))))))
-
-#| Goal0 → Goal0 → Goal0 |#
-(define (disj0 g1 g2)
-  (let ([g1 (goal0-v g1)] [g2 (goal0-v g2)])
-    (goal0 (+ (sized-s g1) (sized-s g2)) (delay/name (λ (s) (mplus ((force (sized-v g1)) s) ((force (sized-v g2)) s)))))))
 
 #| SDisjV → Goal0 |#
 (define (sdisj-v->goal0 g)
@@ -135,48 +176,29 @@
                      (mplus (delay/name ((force (sized-v (goal0-v h))) s))
                             (delay/name ((goal2->goal (force (ldisj-v-t g))) s)))))))))
 
-#| DisjV → Goal0 |#
-(define (disj-v->goal0 g)
-  (if (sdisj-v? g)
-      (sdisj-v->goal0 g)
-      (ldisj-v->goal0 g)))
-
-#| Goal1 → Goal2 |#
-(define-syntax-rule (goal1->goal2 g) (λ (s) (delay/name (cons s g))))
-
-#| SDisjV → DisjV |#
-(define (sdisj-v-check g)
-  (if (> (length (sdisj-v-v g)) disj-v-max)
-      (let-values ([(h t) (split-at (sdisj-v-v g) disj-v-max)])
-        (ldisj-v (sdisj-v->goal0 (sdisj-v h)) (goal1->goal2 (sdisj-v t))))
-      g))
-
-#| Promise Goal0 → DisjV → DisjV |#
-(define (cons-disj g d)
-  (if (sdisj-v? d)
-      (sdisj-v-check (sdisj-v (cons (force g) (sdisj-v-v d))))
-      (ldisj-v (ldisj-v-h d) (disj2 (goal1->goal2 (force g)) (ldisj-v-t d)))))
-
-#| Goal1 → Promise Goal1 → DisjV |#
-(define (disj1 g1 g2)
+#| Goal1 → Goal0 |#
+(define (goal1->goal0 g)
   (cond
-    ((conj-v? g1) (disj1 (conj-v->goal0 g1) g2))
-    ((disj-v? g1) (cons-disj1 g2 g1))
-    (else (let ([g2 (force g2)])
-            (cond
-              ((conj-v? g2) (sdisj-v-check (sdisj-v (list g1 (conj-v->goal0 g2)))))
-              ((disj-v? g2) (cons-disj (delay/name g1) g2))
-              (else (sdisj-v-check (sdisj-v (list g1 g2)))))))))
+    ((disj-v? g) (disj-v->goal0 g))
+    ((conj-v? g) (conj-v->goal0 g))
+    (else g)))
 
-#| Promise Goal1 → DisjV → DisjV |#
-(define (cons-disj1 g d)
-  (if (sdisj-v? d)
-      (let ([g (force g)])
-        (cond
-          ((conj-v? g) (sdisj-v-check (sdisj-v (cons (conj-v->goal0 g) (sdisj-v-v d)))))
-          ((disj-v? g) (append-disj-v d (delay/name g)))
-          (else (sdisj-v-check (sdisj-v (cons g (sdisj-v-v d)))))))
-      (ldisj-v (ldisj-v-h d) (disj2 (goal1->goal2 g) (ldisj-v-t d)))))
+#| Goal2 → Goal |#
+(define ((goal2->goal g) s)
+  (delay/name (delay/name (delay/name
+                           (let ([gr (force (g s))])
+                             (let ([s (car gr)] [g (cdr gr)])
+                               ((force (sized-v (goal0-v (goal1->goal0 g)))) s)))))))
+
+#| (Goal1 → Goal1 → Goal1) → (Goal2 → Goal2 → Goal2) |#
+(define (((liftgoal1->goal2 f) g1 g2) s)
+  (delay/name (let ([g1r (force (g1 s))])
+                (let ([g2r (force (g2 (car g1r)))] [g1 (cdr g1r)])
+                  (let ([g2 (cdr g2r)] [s (car g2r)])
+                    (cons s (f g1 g2)))))))
+
+#| Goal2 → Goal2 → Goal2 |#
+(define conj2 (liftgoal1->goal2 conj1))
 
 #| Goal2 → Promise Goal2 → Goal2 |#
 (define ((disj2 g1 g2) s)
@@ -194,15 +216,6 @@
                             (let ([s (car g2r)] [g2 (cdr g2r)])
                               (cons s (disj1 g2 (delay/name g1)))))))))))
 
-#| DisjV → Promise DisjV → DisjV |#
-(define (append-disj-v d pd)
-  (if (sdisj-v? d)
-      (let ([pd (force pd)])
-        (if (sdisj-v? pd)
-            (sdisj-v-check (sdisj-v (append (sdisj-v-v d) (sdisj-v-v pd))))
-            (ldisj-v (ldisj-v-h pd) (delay/name (disj2 (goal1->goal2 d) (ldisj-v-t pd))))))
-      (ldisj-v (ldisj-v-h d) (delay/name (disj2 (goal1->goal2 d) pd)))))
-
 #| Goal3 → Promise Goal3 → Goal3 |#
 (define (disj g1 g2)
   (cons (delay/name (disj2 (force (car g1)) (delay/name (force (car (force g2))))))
@@ -215,7 +228,7 @@
 (struct state (s d c v))
 
 #| State |#
-(define empty-s (state (make-immutable-hash) (make-immutable-hash) '() 0))
+(define empty-state (state (make-immutable-hash) (make-immutable-hash) '() 0))
 
 #| (Var → Goal2) → Goal2 |#
 (define ((call/fresh2 f) s)
@@ -245,25 +258,6 @@
   (syntax-rules ()
     ((_ () g0 g ...) (all g0 g ...))
     ((_ (x0 x ...) g0 g ...) (call/fresh (λ (x0) (fresh (x ...) g0 g ...))))))
-
-#| Stream a → (a, Stream a) |#
-(define (pull xs) (if (promise? xs) (pull (force xs)) xs))
-
-#| Positive-Integer → Stream a → [a] |#
-(define (take-stream n xs)
-  (if (zero? n)
-      '()
-      (let ([xs (pull xs)])
-        (if (null? xs)
-            '()
-            (cons (car xs) (take (- n 1) (cdr xs)))))))
-
-#| Stream a → [a] |#
-(define (force-stream xs)
-  (let ([xs (pull xs)])
-    (if (null? xs)
-        '()
-        (cons (car xs) (force-stream (cdr xs))))))
 
 #| a → Hash a a → a |#
 (define (walk x h) (hash-ref h x x))
