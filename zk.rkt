@@ -263,3 +263,10 @@
         ((null? cs) s)
         (((constraint-add (car cs)) s) => (λ (s) (loop (cdr cs) s)))
         (else #f)))))
+
+#| (Any ... → State → Maybe State) → [Var] → Any ... → Constraint |#
+(define-syntax-rule (new-constraints op vs arg ...) (build-aux-oc op (arg ...) () (arg ...) vs))
+(define-syntax build-aux-oc
+  (syntax-rules ()
+    ((_ op () (z ...) (arg ...) (v ...)) (let ([z arg] ...) (constraint (λ (s) (op z ... s)) `op (z ...) (list v ...))))
+    ((_ op (x arg ...) (z ...) args vs) (build-aux-oc op (arg ...) (z ... n) args vs))))
