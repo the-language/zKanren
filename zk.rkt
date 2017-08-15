@@ -29,7 +29,7 @@
 #| a → Stream a → Stream a |#
 (define (stream-cons a d) (delay/name (cons a d)))
 
-#| (Sized (State → Stream State)) → Goal0 |#
+#| (Sized Goal) → Goal0 |#
 (struct goal0 (v))
 
 #| [Goal0] → ConjV |#
@@ -44,6 +44,7 @@
 (define (disj-v? x) (or (sdisj-v? x) (ldisj-v? x)))
 #| DisjV = U SDisjV LDisjV |#
 
+#| Goal = State → Stream State |#
 #| Goal1 = U Goal0 ConjV DisjV |#
 #| Goal2 = State → Promise (State, Goal1) |#
 #| Goal3 = ((succeed : Promise Goal2), (fail : Promise Goal2)) |#
@@ -108,7 +109,7 @@
 #| Goal2 → Goal2 → Goal2 |#
 (define conj2 (liftgoal1->goal2 conj1))
 
-#| Goal2 → (State → Stream State) |#
+#| Goal2 → Goal |#
 (define ((goal2->goal g) s)
   (delay/name (delay/name (delay/name
                            (let ([gr (force (g s))])
