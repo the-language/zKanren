@@ -89,7 +89,7 @@
   (cond
     ((null? xs) ys)
     ((promise? xs) (delay/name (mplus ys (force xs))))
-    (else (cons (car xs) (mplus (cdr xs) ys)))))
+    (else (cons (car xs) (mplus ys (cdr xs))))))
 
 #| Stream a → (a → Stream b) → Stream b |#
 (define (bind xs f)
