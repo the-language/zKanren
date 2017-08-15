@@ -48,10 +48,11 @@
 
 #| (Sized Goal) → Goal0 |#
 (struct goal0 (v))
-
 #| Positive-Integer → Goal → Goal0 |#
 (define-syntax-rule (new-goal0 s g)
   (goal0 (new-sized s g)))
+#| Goal0 → Positive-Integer |#
+(define (goal0-s g) (sized-s (goal0-v g)))
 
 #| Goal0 → Goal0 → Bool |#
 (define (>goal0 x y)
@@ -182,11 +183,9 @@
 #| LDisjV → Goal0 |#
 (define (ldisj-v->goal0 g)
   (let ([h (ldisj-v-h g)])
-    (goal0 (sized (sized-s (goal0-v h))
-                  (delay/name
-                   (λ (s)
+    (goal0-s (goal0-s h) (λ (s)
                      (mplus (delay/name ((force (sized-v (goal0-v h))) s))
-                            (delay/name ((goal2->goal (force (ldisj-v-t g))) s)))))))))
+                            (delay/name ((goal2->goal (force (ldisj-v-t g))) s)))))))
 
 #| Goal1 → Goal0 |#
 (define (goal1->goal0 g)
@@ -223,7 +222,7 @@
                     ((sdisj-v? g1) (let ([g2r (force ((force g2) s))])
                                      (let ([s (car g2r)] [g2 (cdr g2r)])
                                        (cons s (disj1 g1 (delay/name g2))))))
-                    ((ldisj-v? g1) (cons s (disj1 g1 (delay/name (goal0 (sized 9 (delay/name (goal2->goal (force g2)))))))))
+                    ((ldisj-v? g1) (cons s (disj1 g1 (delay/name (new-goal0 9 (goal2->goal (force g2)))))))
                     (else (let ([g2r (force ((force g2) s))])
                             (let ([s (car g2r)] [g2 (cdr g2r)])
                               (cons s (disj1 g2 (delay/name g1)))))))))))
