@@ -15,6 +15,7 @@
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
 (require "stream.rkt")
+(provide (all-defined-out))
 
 #| Nat → Var |#
 (struct var (v))
@@ -69,9 +70,15 @@
 #| Goal2 = State → Promise (State, Goal1) |#
 #| Goal3 = ((succeed : Promise Goal2), (fail : Promise Goal2)) |#
 
+#| Goal2 → Goal2 → Goal3 |#
+(define-syntax-rule (new-goal3 s u) (cons (delay/name s) (delay/name u)))
+
 #| Goal3 → Goal3 |#
 (define (noto g)
   (cons (cdr g) (car g)))
+
+#| Goal3 → Goal2 |#
+(define (run-goal3 g) (force (car g)))
 
 #| Goal1 → Goal2 |#
 (define-syntax-rule (goal1->goal2 g) (λ (s) (delay/name (cons s g))))
@@ -236,3 +243,11 @@
 
 #| a → Hash a a → a |#
 (define (walk x h) (hash-ref h x x))
+
+#| Goal3 |#
+(define succeed (new-goal3 (goal1->goal2 (new-goal0 1 (λ (s) (stream s))))
+                           (goal1->goal2 (new-goal0 1 (λ (s) '())))))
+#| Goal3 |#
+(define fail (noto succeed))
+
+(define == (error '==))

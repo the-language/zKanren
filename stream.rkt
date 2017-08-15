@@ -14,7 +14,7 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide stream-cons pull take-stream force-stream mplus bind)
+(provide (all-defined-out))
 
 #| Stream a = U () (a, (Stream a)) (Promise (Stream a)) |#
 #| a → Stream a → Stream a |#
@@ -52,3 +52,9 @@
     ((null? xs) '())
     ((promise? xs) (delay/name (bind (force xs) f)))
     (else (mplus (f (car xs)) (bind (cdr xs) f)))))
+
+#| [a] → Stream a |#
+(define-syntax stream
+  (syntax-rules ()
+    ((_) '())
+    ((_ x xs ...) (stream-cons x (stream xs ...)))))
