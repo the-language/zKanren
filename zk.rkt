@@ -218,17 +218,11 @@
 (define ((disj2 g1 g2) s)
   (delay/name (let ([g1r (force (g1 s))])
                 (let ([s (car g1r)] [g1 (cdr g1r)])
-                  (cond
-                    ((conj-v? g1) (let ([g2r (force ((force g2) s))])
-                                    (let ([s (car g2r)] [g2 (cdr g2r)])
-                                      (cons s (disj1 g2 (delay/name (conj-v->goal0 g1)))))))
-                    ((sdisj-v? g1) (let ([g2r (force ((force g2) s))])
-                                     (let ([s (car g2r)] [g2 (cdr g2r)])
-                                       (cons s (disj1 g1 (delay/name g2))))))
-                    ((ldisj-v? g1) (cons s (disj1 g1 (delay/name (new-goal0 9 (goal2->goal (force g2)))))))
-                    (else (let ([g2r (force ((force g2) s))])
-                            (let ([s (car g2r)] [g2 (cdr g2r)])
-                              (cons s (disj1 g2 (delay/name g1)))))))))))
+                  (if (or (conj-v? g1) (sdisj-v? g1) (goal0? g1))
+                      (let ([g2r (force ((force g2) s))])
+                                                       (let ([s (car g2r)] [g2 (cdr g2r)])
+                                                         (cons s (disj1 g1 (delay/name g2)))))
+                      (cons s (ldisj-v (ldisj-v-h g1) (delay/name (disj2 (force (ldisj-v-t g1) g2))))))))))
 
 #| Goal3 → Promise Goal3 → Goal3 |#
 (define (disj g1 g2)
