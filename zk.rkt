@@ -21,6 +21,10 @@
 #| Positive-Integer → Promise a → Sized a |#
 (struct sized (s v))
 
+#| Positive-Integer → a → Sized a |#
+(define-syntax-rule (new-sized s e)
+  (sized s (delay/name e)))
+
 #| Stream a = U () (a, (Stream a)) (Promise (Stream a)) |#
 #| a → Stream a → Stream a |#
 (define (stream-cons a d) (delay/name (cons a d)))
@@ -44,6 +48,10 @@
 
 #| (Sized Goal) → Goal0 |#
 (struct goal0 (v))
+
+#| Positive-Integer → Goal → Goal0 |#
+(define-syntax-rule (new-goal0 s g)
+  (goal0 (new-sized s g)))
 
 #| Goal0 → Goal0 → Bool |#
 (define (>goal0 x y)
@@ -101,7 +109,7 @@
 #| Goal0 → Goal0 → Goal0 |#
 (define (conj0 g1 g2)
   (let ([g1 (goal0-v g1)] [g2 (goal0-v g2)])
-    (goal0 (+ (sized-s g1) (sized-s g2)) (delay/name (λ (s) (bind ((force (sized-v g1)) s) (force (sized-v g2))))))))
+    (new-goal0 (+ (sized-s g1) (sized-s g2)) (λ (s) (bind ((force (sized-v g1)) s) (force (sized-v g2)))))))
 
 #| DisjV → Goal0 |#
 (define (disj-v->goal0 g)
@@ -112,7 +120,7 @@
 #| Goal0 → Goal0 → Goal0 |#
 (define (disj0 g1 g2)
   (let ([g1 (goal0-v g1)] [g2 (goal0-v g2)])
-    (goal0 (+ (sized-s g1) (sized-s g2)) (delay/name (λ (s) (mplus ((force (sized-v g1)) s) ((force (sized-v g2)) s)))))))
+    (new-goal0 (+ (sized-s g1) (sized-s g2)) (λ (s) (mplus ((force (sized-v g1)) s) ((force (sized-v g2)) s))))))
 
 #| Goal1 → Goal1 → ConjV |#
 (define (conj1 g1 g2)
