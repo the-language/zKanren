@@ -88,10 +88,10 @@
 #| ConjV → Goal0 |#
 (define (conj-v->goal0 g)
   (let ([gs (sort (conj-v-v g) >goal0)])
-    (foldl conj- (car gs) (cdr gs))))
+    (foldl conj0 (car gs) (cdr gs))))
 
 #| Goal0 → Goal0 → Goal0 |#
-(define (conj- g1 g2)
+(define (conj0 g1 g2)
   (let ([g1 (goal0-v g1)] [g2 (goal0-v g2)])
     (goal0 (+ (sized-s g1) (sized-s g2)) (delay/name (λ (s) (bind ((force (sized-v g1)) s) (force (sized-v g2))))))))
 
@@ -117,14 +117,14 @@
                                ((force (sized-v (goal0-v (goal1->goal0 g)))) s)))))))
 
 #| Goal0 → Goal0 → Goal0 |#
-(define (disj- g1 g2)
+(define (disj0 g1 g2)
   (let ([g1 (goal0-v g1)] [g2 (goal0-v g2)])
     (goal0 (+ (sized-s g1) (sized-s g2)) (delay/name (λ (s) (mplus ((force (sized-v g1)) s) ((force (sized-v g2)) s)))))))
 
 #| SDisjV → Goal0 |#
 (define (sdisj-v->goal0 g)
   (let ([gs (sort (sdisj-v-v g) >goal0)])
-    (foldl disj- (car gs) (cdr gs))))
+    (foldl disj0 (car gs) (cdr gs))))
 
 #| LDisjV → Goal0 |#
 (define (ldisj-v->goal0 g)
