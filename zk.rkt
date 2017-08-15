@@ -270,3 +270,12 @@
   (syntax-rules ()
     ((_ op () (z ...) (arg ...) (v ...)) (let ([z arg] ...) (constraint (λ (s) (op z ... s)) `op (z ...) (list v ...))))
     ((_ op (x arg ...) (z ...) args vs) (build-aux-oc op (arg ...) (z ... n) args vs))))
+
+#| a → a → Hash a a → Bool |#
+(define (occurs? x v s)
+  (let ([v (walk v s)])
+    (cond
+      ((equal? x v) #t)
+      ((pair? v) (or (occurs? x (car v) s)
+                     (occurs? x (cdr v) s)))
+      (else #f))))
