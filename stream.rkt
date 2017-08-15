@@ -16,11 +16,11 @@
 #lang racket
 (provide (all-defined-out))
 
-#| Stream a = U () (a, (Stream a)) (Promise (Stream a)) |#
+#| Stream a = U () (a ⨯ Stream a) (Promise (Stream a)) |#
 #| a → Stream a → Stream a |#
 (define (stream-cons a d) (delay/name (cons a d)))
 
-#| Stream a → (a, Stream a) |#
+#| Stream a → a ⨯ Stream a |#
 (define (pull xs) (if (promise? xs) (pull (force xs)) xs))
 
 #| Positive-Integer → Stream a → [a] |#

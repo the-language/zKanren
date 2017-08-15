@@ -264,6 +264,12 @@
         (((constraint-add (car cs)) s) => (λ (s) (loop (cdr cs) s)))
         (else #f)))))
 
+#| [Var] → State → U () (Promise (State ⨯ ())) |#
+(define (check-constraints-stream vs s)
+  (cond
+    ((check-constraints-stream vs s) => (λ (s) (stream s)))
+    (else '())))
+
 #| (Any ... → State → Maybe State) → [Var] → Any ... → Constraint |#
 (define-syntax-rule (new-constraints op vs arg ...) (build-aux-oc op (arg ...) () (arg ...) vs))
 (define-syntax build-aux-oc
@@ -278,4 +284,24 @@
       ((equal? x v) #t)
       ((pair? v) (or (occurs? x (car v) s)
                      (occurs? x (cdr v) s)))
+      (else #f))))
+
+#| Var → a → State → Maybe State |#
+(define (ext-s v x s)
+  (let ([h (state-s s)])
+    (cond
+      ((occurs? v x h) #f)
+      ((hash-has-key? h v) (error 'ext-s))
+      (else (check-constraints (list v) (state (hash-set h v x) (state-d s) (state-c s)))))))
+
+#| a → a → State → Maybe State |#
+(define (unify u v s)
+  (let ([u (walk u s)] [v (walk v s)])
+    (cond
+      ((equal? u v) s)
+      ((var? u) (ext-s u v s))
+      ((var? v) (ext-s v u s))
+      ((and (pair? u) (pair? v))
+       (let ([s (unify (car u) (car v) s)])
+         (and s (unify (cdr u) (cdr v) s))))
       (else #f))))

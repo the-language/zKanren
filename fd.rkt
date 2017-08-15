@@ -29,5 +29,5 @@
 
 #| [Any] → Var → Goal3 |#
 (define (domo d v)
-  (new-goal3 (goal1->goal2 (new-goal0 1 (λ (s) (stream (ext-d v d s)))))
+  (new-goal3 (goal1->goal2 (new-goal0 1 (λ (s) (check-constraints-stream (ext-d v d s)))))
         (run-goal3 (noto (membero v d)))))
