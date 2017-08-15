@@ -67,8 +67,8 @@
 
 #| Goal = State → Stream State |#
 #| Goal1 = U Goal0 ConjV DisjV |#
-#| Goal2 = State → Promise (State, Goal1) |#
-#| Goal3 = ((succeed : Promise Goal2), (fail : Promise Goal2)) |#
+#| Goal2 = State → Promise (State ⨯ Goal1) |#
+#| Goal3 = ((succeed : Promise Goal2) ⨯ (fail : Promise Goal2)) |#
 
 #| Goal2 → Goal2 → Goal3 |#
 (define-syntax-rule (new-goal3 s u) (cons (delay/name s) (delay/name u)))
