@@ -20,10 +20,11 @@
 
 #| Positive-Integer → Promise a → Sized a |#
 (struct sized (s v))
-
 #| Positive-Integer → a → Sized a |#
 (define-syntax-rule (new-sized s e)
   (sized s (delay/name e)))
+#| Sized a → a |#
+(define (run-sized x) (force (sized-v x)))
 
 #| Stream a = U () (a, (Stream a)) (Promise (Stream a)) |#
 #| a → Stream a → Stream a |#
@@ -53,6 +54,8 @@
   (goal0 (new-sized s g)))
 #| Goal0 → Positive-Integer |#
 (define (goal0-s g) (sized-s (goal0-v g)))
+#| Goal0 → Goal |#
+(define (run-goal0 g) (run-sized (goal0-v g)))
 
 #| Goal0 → Goal0 → Bool |#
 (define (>goal0 x y)
@@ -109,8 +112,8 @@
 
 #| Goal0 → Goal0 → Goal0 |#
 (define (conj0 g1 g2)
-  (let ([g1 (goal0-v g1)] [g2 (goal0-v g2)])
-    (new-goal0 (+ (sized-s g1) (sized-s g2)) (λ (s) (bind ((force (sized-v g1)) s) (force (sized-v g2)))))))
+    (new-goal0 (+ (goal0-s g1) (goal0-s g2))
+               (λ (s) (bind ((run-goal0 g1) s) (run-goal0 g2)))))
 
 #| DisjV → Goal0 |#
 (define (disj-v->goal0 g)
@@ -120,8 +123,8 @@
 
 #| Goal0 → Goal0 → Goal0 |#
 (define (disj0 g1 g2)
-  (let ([g1 (goal0-v g1)] [g2 (goal0-v g2)])
-    (new-goal0 (+ (sized-s g1) (sized-s g2)) (λ (s) (mplus ((force (sized-v g1)) s) ((force (sized-v g2)) s))))))
+    (new-goal0 (+ (goal0-s g1) (goal0-s g2))
+               (λ (s) (mplus ((run-goal0 g1) s) ((run-goal0 g2) s)))))
 
 #| Goal1 → Goal1 → ConjV |#
 (define (conj1 g1 g2)
@@ -184,7 +187,7 @@
 (define (ldisj-v->goal0 g)
   (let ([h (ldisj-v-h g)])
     (goal0-s (goal0-s h) (λ (s)
-                     (mplus (delay/name ((force (sized-v (goal0-v h))) s))
+                     (mplus (delay/name ((run-goal0 h) s))
                             (delay/name ((goal2->goal (force (ldisj-v-t g))) s)))))))
 
 #| Goal1 → Goal0 |#
@@ -199,7 +202,7 @@
   (delay/name (delay/name (delay/name
                            (let ([gr (force (g s))])
                              (let ([s (car gr)] [g (cdr gr)])
-                               ((force (sized-v (goal0-v (goal1->goal0 g)))) s)))))))
+                               ((run-goal0 (goal1->goal0 g)) s)))))))
 
 #| (Goal1 → Goal1 → Goal1) → (Goal2 → Goal2 → Goal2) |#
 (define (((liftgoal1->goal2 f) g1 g2) s)
