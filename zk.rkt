@@ -86,12 +86,16 @@
 (define disj1+ (lift1+ disj-))
 (define conj1+ (lift1+ conj-))
 
-#| Goal3 → Promise Goal3 → Goal3 |#
-(define (conj g1 g2) (goal3 (conj1 (goal3-s g1) (goal1 (force (goal3-s (force g2)))))
-                            (disj1 (goal3-s g1) (goal1 (force (goal3-s (force g2)))))))
-(define (disj g1 g2) (goal3 (disj1 (goal3-s g1) (goal1 (force (goal3-s (force g2)))))
-                            (conj1 (goal3-s g1) (goal1 (force (goal3-s (force g2)))))))
+#| Promise Goal3 → Goal1 |#
+(define (pgoal3-s g) (delay/name (force (goal3-s (force g)))))
+(define (pgoal3-u g) (delay/name (force (goal3-u (force g)))))
 
+#| ([Goal1] → Goal1) → ([Promise Goal3] → Goal3) |#
+(define ((lift3+ f) gs) (goal3 (delay/name (force (f (map pgoal3-s gs)))) (delay/name (force (f (map pgoal3-u gs))))))
+
+#| [Promise Goal3] → Goal3 |#
+(define disj3+ (lift3+ disj1+))
+(define conj3+ (lift3+ conj1+))
 
 #| (s : Hash Var Any) → (d : Hash Var [Any]) → (c : [Constraint]) → (v : Nat) → State |#
 (struct state (s d c v))
@@ -114,13 +118,13 @@
 (define-syntax all
   (syntax-rules ()
     ((_ g) g)
-    ((_ g0 g ...) (conj g0 (delay (all g ...))))))
+    ((_ g ...) (conj3+ (list (delay g) ...)))))
 
 #| Goal3 ... → Goal3 |#
 (define disj+
   (syntax-rules ()
     ((_ g) g)
-    ((_ g0 g ...) (disj g0 (delay (all g ...))))))
+    ((_ g ...) (disj3+ (list (delay g) ...)))))
 
 (define-syntax-rule (conde (g0 g ...) ...) (disj+ (all g0 g ...) ...))
 
