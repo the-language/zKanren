@@ -24,16 +24,31 @@
 
 #| Pos = Positive-Integer |#
 
-#| Pos → Promise a → Sized a |#
-(struct sized (s v))
-#| Pos → a → Sized a |#
-(define-syntax-rule (new-sized s e)
-  (sized s (delay/name e)))
-#| Sized a → a |#
-(define (run-sized x) (force (sized-v x)))
+#| Nat → a → Promise+ a |#
+(define-syntax-rule (sized n x) (raw-sized n (delay/name x)))
+(define (raw-sized n x) (if (zero? n) (force x) (delay/name (sized (- n 1) x))))
+
+#| Promise+ a = U a (Promise (Promise+ a)) |#
+
+#| Promise+ a → a |#
+(define (force+ x) (if (promise? x) (force+ (force x)) x))
+
+#| Promise+ a → (a → b) → Promise+ b |#
+(define (fmap x f) (if (promise? x) (delay/name (fmap (force x) f)) (f x)))
+
+#| a → ((a → b) → b) |#
+(define (($ x) f) (f x))
+
+#| [a] → (a → Bool) → Values (Maybe a) [a] |#
+(define (find-a xs f)
+  (let loop ([as xs] [bs '()])
+    (cond
+      [(null? as) (values #f xs)]
+      [(f (car as)) (values (car as) (append (cdr as) bs))]
+      [else (loop (cdr as) (cons (car as) bs))])))
 
 #| Goal = State → Stream State |#
-#| Goal1 = Promise Goal |#
+#| Goal1 = Promise+ Goal |#
 #| Goal3 = ((succeed : Goal1) ⨯ (fail : Goal1)) |#
 
 #| Goal → Goal1 |#
@@ -54,15 +69,22 @@
 (define (run-goal3 g s) ((force (car g)) s))
 
 #| Goal → Goal → Goal |#
-(define (conj- g1 g2) (λ (s) (bind (g1 s) g2)))
-(define (disj- g1 g2) (λ (s) (mplus (g1 s) (g2 s))))
+(define ((disj- g1 g2) s) (mplus (g1 s) (g2 s)))
+(define ((conj- g1 g2) s) (bind (g1 s) g2))
 
 #| Goal1 → Goal |#
-(define ((goal1->goal g) s) (delay/name ((force g) s)))
+(define ((goal1->goal g) s) (fmap g ($ s)))
 
-#| Goal1 → Goal1 → Goal1 |#
-(define (conj1 g1 g2) (goal1 (conj- (force g1) (goal1->goal g2))))
-(define (disj1 g1 g2) (goal1 (disj- (force g1) (goal1->goal g2))))
+#| (Goal → Goal → Goal) → ([Goal1] → Goal1) |#
+(define ((lift1+ f) gs)
+  (let-values ([(h t) (find-a gs (λ (x) (not (promise? x))))])
+    (if h
+        (f h (goal1->goal (delay/name (force ((lift1+ f) t)))))
+        (sized (length gs) (disj1+ (map force gs))))))
+
+#| [Goal1] → Goal1 |#
+(define disj1+ (lift1+ disj-))
+(define conj1+ (lift1+ conj-))
 
 #| Goal3 → Promise Goal3 → Goal3 |#
 (define (conj g1 g2) (goal3 (conj1 (goal3-s g1) (goal1 (force (goal3-s (force g2)))))
@@ -118,7 +140,7 @@
         x)))
 
 #| Goal3 |#
-(define succeed (goal3 (goal1 (λ (s) (stream s))) (goal1 (λ (s) '()))))
+(define succeed (goal3 (goal1 (λ (s) (stream+ s))) (goal1 (λ (s) '()))))
 
 #| Goal3 |#
 (define fail (noto succeed))
@@ -140,7 +162,7 @@
 #| [Var] → State → U () (Promise (State ⨯ ())) |#
 (define (check-constraints-stream vs s)
   (cond
-    ((check-constraints-stream vs s) => (λ (s) (stream s)))
+    ((check-constraints-stream vs s) => (λ (s) (stream+ s)))
     (else '())))
 
 #| (Any ... → State → Maybe State) → [Var] → Any ... → Constraint |#
@@ -178,25 +200,3 @@
        (let ([s (unify (car u) (car v) s)])
          (and s (unify (cdr u) (cdr v) s))))
       (else #f))))
-
-#| Maybe a → (a → Maybe b) → Maybe b |#
-(define (bind-maybe x f) (if x (f x) #f))
-
-(define-syntax do
-  (syntax-rules ()
-    ((_ bind x) x)
-    ((_ bind [x mx] xs ...) (bind mx (λ (x) (do bind xs ...))))
-    ((_ bind mx xs ...) (bind mx (λ (x) (do bind xs ...))))))
-
-(struct nothing- ())
-#| Maybe+ |#
-(define nothing (nothing-))
-
-#| Maybe+ a → (a → Maybe+ b) → Maybe+ b |#
-(define (bind-maybe+ x f) (if (equal? x nothing) nothing (f x)))
-
-#| Maybe+ a → Maybe a |#
-(define (maybe+->maybe x) (if (equal? x nothing) #f x))
-
-#| Maybe a → Maybe+ a |#
-(define (maybe->maybe+ x) (if x x nothing))

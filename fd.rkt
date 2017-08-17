@@ -17,6 +17,7 @@
 (require "zk.rkt")
 (require "stream.rkt")
 (require "prelude.rkt")
+(require "monad.rkt")
 (provide (all-defined-out))
 
 #| State → Var → Maybe [Any] |#

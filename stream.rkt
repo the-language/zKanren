@@ -16,15 +16,15 @@
 #lang racket
 (provide (all-defined-out))
 
-#| Stream a = U () (a ⨯ Stream a) (Promise (Stream a)) |#
+#| Stream a = U () (Promise+ (a ⨯ Stream a)) |#
 #| a → Stream a → Stream a |#
-(define (stream-cons a d) (delay/name (cons a d)))
+(define (stream+-cons a d) (delay/name (cons a d)))
 
 #| Stream a → a ⨯ Stream a |#
 (define (pull xs) (if (promise? xs) (pull (force xs)) xs))
 
 #| Positive-Integer → Stream a → [a] |#
-(define (take-stream n xs)
+(define (take-stream+ n xs)
   (if (zero? n)
       '()
       (let ([xs (pull xs)])
@@ -33,11 +33,11 @@
             (cons (car xs) (take (- n 1) (cdr xs)))))))
 
 #| Stream a → [a] |#
-(define (force-stream xs)
+(define (force-stream+ xs)
   (let ([xs (pull xs)])
     (if (null? xs)
         '()
-        (cons (car xs) (force-stream (cdr xs))))))
+        (cons (car xs) (force-stream+ (cdr xs))))))
 
 #| Stream a → Stream a → Stream a |#
 (define (mplus xs ys)
@@ -54,7 +54,7 @@
     (else (mplus (f (car xs)) (bind (cdr xs) f)))))
 
 #| [a] → Stream a |#
-(define-syntax stream
+(define-syntax stream+
   (syntax-rules ()
     ((_) '())
-    ((_ x xs ...) (stream-cons x (stream xs ...)))))
+    ((_ x xs ...) (stream+-cons x (stream+ xs ...)))))
