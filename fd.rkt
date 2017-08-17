@@ -30,5 +30,16 @@
 
 #| [Any] → Var → Goal3 |#
 (define (domo d v)
-  (new-goal3 (goal1->goal2 (new-goal0 1 (λ (s) (check-constraints-stream (ext-d v d s)))))
-        (run-goal3 (noto (membero v d)))))
+  (goal3 (goal1 (λ (s) (check-constraints-stream (ext-d v d s))))
+         (goal3-u (membero v d))))
+
+#| [Var] → State → Maybe State |#
+(define (check-fd vs s)
+  (if (ormap
+       (λ (v)
+         (equal? #f (do bind-maybe+
+                      [d (hash-ref (state-d s) v nothing)]
+                      [w (hash-ref (state-s s) v nothing)]
+                      (member (walk* w (state-s s)) (map (λ (x) (walk* x (state-s s))) d))))) vs)
+      #f
+      s))

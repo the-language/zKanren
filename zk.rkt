@@ -110,13 +110,20 @@
 #| a → Hash a a → a |#
 (define (walk x h) (hash-ref h x x))
 
+#| a → Hash a a → a |#
+(define (walk* x h)
+  (let ([x (walk x h)])
+    (if (pair? x)
+        (cons (walk* (car x) h) (walk* (cdr x) h))
+        x)))
+
 #| Goal3 |#
 (define succeed (goal3 (goal1 (λ (s) (stream s))) (goal1 (λ (s) '()))))
 
 #| Goal3 |#
 (define fail (noto succeed))
 
-(define == (error '==))
+(define (== x y) (error '==))
 
 #| (State → Maybe State) → Symbol → [Any] → [Var] → Constraint |#
 (struct constraint (add kind parm vars))
@@ -162,7 +169,7 @@
 
 #| a → a → State → Maybe State |#
 (define (unify u v s)
-  (let ([u (walk u s)] [v (walk v s)])
+  (let ([u (walk u (state-s s))] [v (walk v (state-s s))])
     (cond
       ((equal? u v) s)
       ((var? u) (ext-s u v s))
@@ -171,3 +178,25 @@
        (let ([s (unify (car u) (car v) s)])
          (and s (unify (cdr u) (cdr v) s))))
       (else #f))))
+
+#| Maybe a → (a → Maybe b) → Maybe b |#
+(define (bind-maybe x f) (if x (f x) #f))
+
+(define-syntax do
+  (syntax-rules ()
+    ((_ bind x) x)
+    ((_ bind [x mx] xs ...) (bind mx (λ (x) (do bind xs ...))))
+    ((_ bind mx xs ...) (bind mx (λ (x) (do bind xs ...))))))
+
+(struct nothing- ())
+#| Maybe+ |#
+(define nothing (nothing-))
+
+#| Maybe+ a → (a → Maybe+ b) → Maybe+ b |#
+(define (bind-maybe+ x f) (if (equal? x nothing) nothing (f x)))
+
+#| Maybe+ a → Maybe a |#
+(define (maybe+->maybe x) (if (equal? x nothing) #f x))
+
+#| Maybe a → Maybe+ a |#
+(define (maybe->maybe+ x) (if x x nothing))
