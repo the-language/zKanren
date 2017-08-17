@@ -25,7 +25,8 @@
 #| Var → [Any] → State → State |#
 (define (ext-d v d s) (state (state-s s)
                              (hash-set (state-d s) v (append (or (get-d s v) '()) d))
-                             (state-c s)))
+                             (state-c s)
+                             (state-v s)))
 
 #| [Any] → Var → Goal3 |#
 (define (domo d v)
