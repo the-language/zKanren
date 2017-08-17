@@ -57,13 +57,6 @@
 #| Goal2 = State → (Values State Goal1) |#
 #| Goal3 = ((succeed : Promise Goal2) ⨯ (fail : Promise Goal2)) |#
 
-#| [Goal0] → Maybe (Promise Goal2) → ConjE |#
-(struct conje (h t))
-#| [Goal0] → Maybe (Promise Goal2) → DisjE |#
-(struct disje (h t))
-#| Goal1E = U Goal0 ConjE DisjE |#
-#| Goal2E = State → (Values State Goal1E) |#
-
 #| Goal2 → Goal2 → Goal3 |#
 (define-syntax-rule (new-goal3 s u) (cons (delay/name s) (delay/name u)))
 
@@ -78,6 +71,12 @@
 (define-syntax-rule (goal1->goal2 g) (λ (s) (values s g)))
 #| Goal0 → Goal1.5 |#
 (define-syntax-rule (goal0->goal1.5 g) (goal1->goal2 g))
+
+#| Goal2 → Promise Goal2 → Goal2 |#
+(define (disj2+ g1 g2) (error))
+
+#| Goal2 → Promise Goal2 → Goal2 |#
+(define (conj2+ g1 g2) (error))
 
 #| Goal0 → Goal0 → Goal0 |#
 (define (conj0 g1 g2)
@@ -107,8 +106,10 @@
 #| Pos → Goal2 → Goal1.5 |#
 (define ((eval-goal2 local-max-size g) s)
   (let-values ([(s g) (g s)])
-    (let-values ([(s g) ((eval-goal1 local-max-size g) s)])
-      (values s g))))
+    ((eval-goal1 local-max-size g) s)))
+
+#| Pos → Goal1 → Goal1.5 |#
+(define (eval-goal1 local-max-size g) (goal2e->goal1.5 (goal1->goal2e max-size g)))
 
 #|
 #| Pos → Goal1 → Goal1.5 |#
@@ -125,8 +126,38 @@
                  [(goal0? g) (values s g)]
                  [(disj2? g) |#
 
+#| [Goal0] → Maybe (Promise Goal2) → ConjE |#
+(struct conje (h t))
+#| [Goal0] → Maybe (Promise Goal2) → DisjE |#
+(struct disje (h t))
+#| Goal1E = U Goal0 ConjE DisjE |#
+#| Goal2E = State → (Values State Goal1E) |#
+
+#| Goal2E → Goal1.5 |#
+(define ((goal2e->goal1.5 g) s)
+  (let-values ([(s g) (g s)])
+    (values s (cond
+                [(goal0? g) g]
+                [(conje? g) (conj0 (fold-goal0 conj0 (conje-h g)) (goal0 1 (goal2->goal (force (conje-t g)))))]
+                [(disje? g) (disj0 (fold-goal0 disj0 (disje-h g)) (goal0 1 (goal2->goal (force (disje-t g)))))]))))
+
+#| Pos → Goal2 → Goal2E |#
+(define ((goal2->goal2e local-max-size g) s)
+  (let-values ([(s g) (g s)])
+    ((goal1->goal2e local-max-size g) s)))
+
 #| Pos → Goal1 → Goal2E |#
 (define (goal1->goal2e local-max-size g)
+  (cond
+    [(goal0? g) (goal0->goal1.5 g)]
+    [(disj2? g)
+     (λ (s)
+       (let-values ([(s g1) ((goal2->goal2e local-max-size (disj2-h g)) s)])
+         (cond
+           [(and (disje? g1) (disje-t g1)) (values s (disje (disje-h g1) (delay/name (disj2+ (force (disj2-t g)) (disje-t g1)))))]
+           [(and (disje? g1) 
+       
+
 #| (s : Hash Var Any) → (d : Hash Var [Any]) → (c : [Constraint]) → (v : Nat) → State |#
 (struct state (s d c v))
 
