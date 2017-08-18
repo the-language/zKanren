@@ -75,8 +75,12 @@
 #| Goal1 → Goal |#
 (define ((goal1->goal g) s) (fmap g ($ s)))
 
+#| Pos → [Promise+ a] → ([Promise+ a] → b) → b |#
+(define (force-n n xs f)
+  (cond
+
 #| (Goal → Goal → Goal) → ([Goal1] → Goal1) |#
-(define ((lift1+ f) gs)
+(define ((lift1+- f) gs)
   (let-values ([(h t) (find-a gs (λ (x) (not (promise? x))))])
     (if h
         (f h (goal1->goal (delay/name (force ((lift1+ f) t)))))
