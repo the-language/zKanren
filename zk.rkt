@@ -22,6 +22,10 @@
 #| Nat → Var |#
 (struct var (v))
 
+#| Num → Num |#
+(define (succ x) (+ 1 x))
+(define (pred x) (- x 1))
+
 #| Pos = Positive-Integer |#
 
 #| Nat → a → Promise+ a |#
@@ -35,6 +39,9 @@
 
 #| Promise+ a → (a → b) → Promise+ b |#
 (define (fmap x f) (if (promise? x) (delay/name (fmap (force x) f)) (f x)))
+
+#| Promise a → (a → b) → Promise b |#
+(define-syntax-rule (fmap-1 x f) (delay/name (f (force x))))
 
 #| a → ((a → b) → b) |#
 (define (($ x) f) (f x))
@@ -75,11 +82,19 @@
 #| Goal1 → Goal |#
 (define ((goal1->goal g) s) (fmap g ($ s)))
 
-#| Pos → [Promise+ a] → ([Promise+ a] → b) → b |#
-(define (force-n n xs f)
-  (cond
+#| Pos → [Promise+ a] → (Pos → [Promise+ a] → b) → b |#
+(define (fmap-n n xs f)
+  (let loop ([n n] [xs xs] [ys '()])
+    (cond
+      [(zero? n) (f 0 (append ys xs))]
+      [(null? xs) (if (ormap promise? ys)
+                      (loop n ys '())
+                      (f n ys))]
+      [(promise? (car xs)) (fmap-1 (car xs) (λ (a) (loop (pred n) (cdr xs) (cons a ys))))]
+      [else (loop (cdr xs) (cons (car xs) ys))])))
 
 #| (Goal → Goal → Goal) → ([Goal1] → Goal1) |#
+(define ((lift1+ f) gs) (fmap-n max-size gs (λ (m gs) ((lift1+- f) gs))))
 (define ((lift1+- f) gs)
   (let-values ([(h t) (find-a gs (λ (x) (not (promise? x))))])
     (if h
