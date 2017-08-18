@@ -1,4 +1,4 @@
-;;  zKanren: MicroKanren with Constraints and Optimizations
+;;  zKanren: MicroKanren with Constraints and noto
 ;;  Copyright (C) 2017  Zaoqi
 
 ;;  This program is free software: you can redistribute it and/or modify
