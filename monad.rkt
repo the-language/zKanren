@@ -20,9 +20,9 @@
 (define (bind-maybe x f) (if x (f x) #f))
 
 (define-syntax do
-  (syntax-rules ()
+  (syntax-rules (<-)
     ((_ bind x) x)
-    ((_ bind [x mx] xs ...) (bind mx (λ (x) (do bind xs ...))))
+    ((_ bind x <- mx xs ...) (bind mx (λ (x) (do bind xs ...))))
     ((_ bind mx xs ...) (bind mx (λ (x) (do bind xs ...))))))
 
 (struct nothing- ())

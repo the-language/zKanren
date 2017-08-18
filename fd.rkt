@@ -39,8 +39,8 @@
   (if (ormap
        (λ (v)
          (equal? #f (do bind-maybe+
-                      [d (hash-ref (state-d s) v nothing)]
-                      [w (hash-ref (state-s s) v nothing)]
+                      d <- (hash-ref (state-d s) v nothing)
+                      w <- (hash-ref (state-s s) v nothing)
                       (member (walk* w (state-s s)) (map (λ (x) (walk* x (state-s s))) d))))) vs)
       #f
       s))
