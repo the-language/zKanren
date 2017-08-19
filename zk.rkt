@@ -82,24 +82,28 @@
 #| Goal1 → Goal |#
 (define ((goal1->goal g) s) (fmap g ($ s)))
 
-#| Pos → [Promise+ a] → (Pos → [Promise+ a] → b) → b |#
+#| Pos → [Promise+ a] → (Pos → [a] → [Promise+ a] → b) → b |#
 (define (fmap-n n xs f)
-  (let loop ([n n] [xs xs] [ys '()])
+  (let loop ([n n] [xs xs] [ys '()] [zs '()])
     (cond
-      [(zero? n) (f 0 (append ys xs))]
-      [(null? xs) (if (ormap promise? ys)
-                      (loop n ys '())
-                      (f n ys))]
-      [(promise? (car xs)) (fmap-1 (car xs) (λ (a) (loop (pred n) (cdr xs) (cons a ys))))]
-      [else (loop (cdr xs) (cons (car xs) ys))])))
+      [(zero? n) (let-values ([(xs1 zs1) (partition promise? (append ys xs))])
+                   (f 0 (append zs1 zs) xs1))]
+      [(null? xs) (if (null? ys)
+                      (f n zs '())
+                      (loop n ys '() zs))]
+      [(promise? (car xs)) (fmap-1 (car xs) (λ (a) (loop (pred n) (cdr xs) (cons a ys) zs)))]
+      [else (loop n (cdr xs) ys (cons (car xs) zs))])))
 
 #| (Goal → Goal → Goal) → ([Goal1] → Goal1) |#
-(define ((lift1+ f) gs) (fmap-n max-size gs (λ (m gs) ((lift1+- f) gs))))
-(define ((lift1+- f) gs)
-  (let-values ([(h t) (find-a gs (λ (x) (not (promise? x))))])
-    (if h
-        (f h (goal1->goal (delay/name (force ((lift1+ f) t)))))
-        (sized (length gs) (disj1+ (map force gs))))))
+(define ((lift1+ f) gs) (fmap-n max-size gs (λ (m gs gps) (lift1+- f gs gps))))
+#| (Goal → Goal → Goal) → [Goal] → [Goal1] → Goal1 |#
+(define (lift1+- f gs gps)
+  (let loop ([gs gs] [gps gps])
+    (if (null? gs)
+        (if (null? gps)
+            succeed-
+            (sized (length gps) (let-values ([(gs1 gps1) (partition promise? (map force gps))]) (loop gs1 gps1))))
+        (f (car gs) (goal1->goal (loop (cdr gs) gps))))))
 
 #| [Goal1] → Goal1 |#
 (define disj1+ (lift1+ disj-))
@@ -162,8 +166,11 @@
         (cons (walk* (car x) h) (walk* (cdr x) h))
         x)))
 
+#| Goal |#
+(define succeed- (λ (s) (stream+ s)))
+
 #| Goal3 |#
-(define succeed (goal3 (goal1 (λ (s) (stream+ s))) (goal1 (λ (s) '()))))
+(define succeed (goal3 (goal1 succeed-) (goal1 (λ (s) '()))))
 
 #| Goal3 |#
 (define fail (noto succeed))
