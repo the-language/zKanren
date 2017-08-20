@@ -15,6 +15,7 @@
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
 (require "stream.rkt")
+(require "monad.rkt")
 (provide (all-defined-out))
 
 (define max-size 32)
@@ -181,7 +182,21 @@
 (struct constraint (add kind parm vars))
 
 #| [Var] → State → Maybe State |#
+(define (check-fd vs s)
+  (if (ormap
+       (λ (v)
+         (equal? #f (do bind-maybe+
+                      d <- (hash-ref (state-d s) v nothing)
+                      w <- (hash-ref (state-s s) v nothing)
+                      (member (walk* w (state-s s)) (map (λ (x) (walk* x (state-s s))) d))))) vs)
+      #f
+      s))
+#| [Var] → State → Maybe State |#
 (define (check-constraints vs s)
+  (do bind-maybe
+    ns <- (check-constraints- vs s)
+    (check-fd vs ns)))
+(define (check-constraints- vs s)
   (let-values ([(ca cb) (partition (λ (c) (ormap (λ (x) (member x (constraint-vars c))) vs)) (state-c s))])
     (let loop ([cs ca] [s (state (state-s s) (state-d s) cb (state-v s))])
       (cond
