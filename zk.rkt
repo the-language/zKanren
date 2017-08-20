@@ -206,10 +206,10 @@
 (define (occurs? x v s)
   (let ([v (walk v s)])
     (cond
-      ((equal? x v) #t)
-      ((pair? v) (or (occurs? x (car v) s)
-                     (occurs? x (cdr v) s)))
-      (else #f))))
+      [(and (var? x) (var? v) (equal? x v)) #t]
+      [(pair? v) (or (occurs? x (car v) s)
+                     (occurs? x (cdr v) s))]
+      [else #f])))
 
 #| Var → a → State → Maybe State |#
 (define (ext-s v x s)
