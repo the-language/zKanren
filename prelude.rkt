@@ -19,8 +19,7 @@
 
 (define (membero x xs)
   (conde
-   ((nullo xs) fail)
-   ((caro xs x) succeed)
+   ((caro xs x))
    ((fresh (d)
           (cdro xs d)
           (membero x d)))))

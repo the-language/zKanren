@@ -14,6 +14,8 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
+(define (stream) (error))
+(define (stream-cons) (error))
 (require "zk.rkt")
 (require "stream.rkt")
 (require "prelude.rkt")
@@ -31,5 +33,5 @@
 
 #| [Any] → Var → Goal3 |#
 (define (domo d v)
-  (goal3 (goal1 (λ (s) (check-constraints-stream (ext-d v d s))))
+  (goal3 (goal1 (λ (s) (maybe->stream (check-constraints (ext-d v d s)))))
          (goal3-u (membero v d))))

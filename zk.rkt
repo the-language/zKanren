@@ -14,6 +14,8 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
+(define (stream) (error))
+(define (stream-cons) (error))
 (require "stream.rkt")
 (require "monad.rkt")
 (provide (all-defined-out))
@@ -176,6 +178,12 @@
 #| Goal3 |#
 (define fail (noto succeed))
 
+#| a → b → Goal1 |#
+(define (==1 x y)
+  (goal1
+   (λ (s)
+     (maybe->stream (unify x y s)))))
+
 (define (== x y) (error '==))
 
 #| (State → Maybe State) → Symbol → [Any] → [Var] → Constraint |#
@@ -204,11 +212,11 @@
         (((constraint-add (car cs)) s) => (λ (s) (loop (cdr cs) s)))
         (else #f)))))
 
-#| [Var] → State → U () (Promise (State ⨯ ())) |#
-(define (check-constraints-stream vs s)
+#| Maybe a → Stream a |#
+(define (maybe->stream x)
   (cond
-    ((check-constraints-stream vs s) => (λ (s) (stream+ s)))
-    (else '())))
+    [x (stream+ x)]
+    [else '()]))
 
 #| (Any ... → State → Maybe State) → [Var] → Any ... → Constraint |#
 (define-syntax-rule (new-constraints op vs arg ...) (build-aux-oc op (arg ...) () (arg ...) vs))
