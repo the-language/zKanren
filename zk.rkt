@@ -137,17 +137,10 @@
                 (let ([v (state-v s)])
                   (set! x (var v))
                   (g1 (state (state-s s) (state-d s) (state-c s) (+ 1 v)))))))))
-#| (Var → Goal1) → Goal1 |#
-;BUG
-(define (call/fresh1 f)
-  (goal1 (λ (s) (let ([v (state-v s)])
-                  ((force (f (var v)))
-                   (state (state-s s) (state-d s) (state-c s) (+ 1 v)))))))
 
-#| (Var → Goal3) → Goal3 |#
-(define (call/fresh f)
-  (goal3 (goal1 (call/fresh1 (λ (v) (goal3-s (f v)))))
-         (goal1 (call/fresh1 (λ (v) (goal3-u (f v)))))))
+#| Id → Goal3 → Goal3 |#
+(define (fresh3 x g)
+  (goal3 (fresh1 x (goal3-s g)) (fresh1 x (goal3-u g))))
 
 #| Goal3 ... → Goal3 |#
 (define-syntax all
@@ -166,7 +159,7 @@
 (define-syntax fresh
   (syntax-rules ()
     ((_ () g0 g ...) (all g0 g ...))
-    ((_ (x0 x ...) g0 g ...) (call/fresh (λ (x0) (fresh (x ...) g0 g ...))))))
+    ((_ (x0 x ...) g0 g ...) (fresh3 x0 (fresh (x ...) g0 g ...)))))
 
 #| a → Hash a a → a |#
 (define (walk x h) (hash-ref h x x))
