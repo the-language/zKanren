@@ -129,7 +129,16 @@
 #| State |#
 (define empty-state (state (make-immutable-hash) (make-immutable-hash) '() 0))
 
+#| Id → Goal1 → Goal1 |#
+(define-syntax-rule (fresh1 x g)
+  (let ([x nothing])
+    (fmap g (λ (g1)
+              (λ (s)
+                (let ([v (state-v s)])
+                  (set! x (var v))
+                  (g1 (state (state-s s) (state-d s) (state-c s) (+ 1 v)))))))))
 #| (Var → Goal1) → Goal1 |#
+;BUG
 (define (call/fresh1 f)
   (goal1 (λ (s) (let ([v (state-v s)])
                   ((force (f (var v)))
