@@ -14,7 +14,7 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide (all-defined-out))
+(provide bind-maybe do nothing bind-maybe+ maybe+->maybe maybe->maybe+)
 
 #| Maybe a → (a → Maybe b) → Maybe b |#
 (define (bind-maybe x f) (if x (f x) #f))
