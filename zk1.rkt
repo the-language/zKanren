@@ -14,7 +14,7 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide )
+(provide fmap goal1->goal0 lift1+ disj1+ conj1+)
 (require "zk0.rkt")
 
 #| Promise+ a → (a → b) → Promise+ b |#
@@ -27,7 +27,7 @@
 (define ((goal1->goal0 g) s) (fmap g ($ s)))
 
 #| (Goal0 → Goal0 → Goal0) → ([Goal1] → Goal1) |#
-(define ((lift1 f) gs)
+(define ((lift1+ f) gs)
   (let-values ([(g0s g1s) (partition promise? gs)])
     (let loop ([g0s g0s] [g1s g1s])
       (if (null? g0s)
@@ -36,3 +36,8 @@
               (sized (length g1s) (let-values ([(g0s1 g1s1) (partition promise? (map force g1s))])
                                   (loop g0s1 g1s1))))
           (f (car g0s) (goal1->goal0 (loop (cdr g0s) g1s)))))))
+
+
+#| [Goal1] → Goal1 |#
+(define disj1+ (lift1+ disj0))
+(define conj1+ (lift1+ conj0))
