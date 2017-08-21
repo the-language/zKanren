@@ -15,5 +15,6 @@
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
 (require "zk2-unfair.rkt")
+(provide (all-from-out "zk2-unfair.rkt"))
 ;(require "zk2-fair.rkt")
-(provide (all-defined-out))
+;(provide (all-from-out "zk2-fair.rkt"))

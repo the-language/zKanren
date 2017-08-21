@@ -14,5 +14,21 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
+(provide (all-defined-out))
+(require "zk2.rkt")
 
-#| Goal3 = (succeed : Goal2) ⨯ (fail : Goal2) |#
+#| Goal3 = (succeed : Promise Goal2) ⨯ (fail : Promise Goal2) |#
+
+#| Goal2 → Goal2 → Goal3 |#
+(define-syntax-rule (goal3 s u) (cons (delay/name s) (delay/name u)))
+
+#| Goal3 → Goal2 |#
+(define (goal3-s g) (pack (force (car g))))
+(define (goal3-u g) (pack (force (cdr g))))
+
+#| Promise Goal3 → Goal2 |#
+(define (pgoal3-s g) (delay/name (goal3-s (force g))))
+(define (pgoal3-u g) (delay/name (goal3-u (force g))))
+
+#| (Size → [Promise Goal2] → Goal2) → (Size → [Promise Goal3] → Goal3) |#
+(define ((lift3+ f) local-max-size gs) (goal3 (f local-max-size (map pgoal3-s gs)) (f local-max-size (map pgoal3-u gs))))
