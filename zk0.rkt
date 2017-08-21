@@ -14,7 +14,7 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide $ sized mplus+ disj0 conj0)
+(provide $ sized mplus bind succeed0 fail0 disj0 conj0)
 (require "stream.rkt")
 
 #| a → ((a → b) → b) |#
@@ -27,24 +27,24 @@
 
 #| Goal0 = State → Stream State |#
 
-#| [Stream a] → Stream a |#
-(define (mplus+ xs)
-  (let-values ([(p s) (partition promise? xs)])
-    (let loop ([p p] [s s])
-      (if (null? p)
-          (if (null? s)
-              '()
-              (sized (length s) (let-values ([(p1 s1) (partition promise? (map force s))])
-                                  (loop p1 s1))))
-          (let ([pa (car p)])
-            (cons (car pa) (if (promise? (cdr pa))
-                               (loop (cdr p) (cons (cdr pa) s))
-                               (loop (cons (cdr pa) p) s))))))))
+#| Stream a → Stream a → Stream a |#
+(define (mplus xs ys)
+  (cond
+    ((null? xs) ys)
+    ((promise? xs) (delay/name (mplus ys (force xs))))
+    (else (cons (car xs) (mplus ys (cdr xs))))))
 
+#| Stream a → (a → Stream b) → Stream b |#
+(define (bind xs f)
+  (cond
+    ((null? xs) '())
+    ((promise? xs) (delay/name (bind (force xs) f)))
+    (else (mplus (f (car xs)) (bind (cdr xs) f)))))
+
+#| Goal0 |#
+(define (succeed0 s) (stream s))
+(define (fail0 s) (stream))
 
 #| Goal0 → Goal0 → Goal0 |#
 (define ((disj0 g1 g2) s) (mplus (g1 s) (g2 s)))
 (define ((conj0 g1 g2) s) (bind (g1 s) g2))
-
-#| [Goal0] → Goal0 |#
-(define ((disj0+ gs) s) (mplus+ (map ($ s) gs)))

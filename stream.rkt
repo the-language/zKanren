@@ -39,22 +39,8 @@
         '()
         (cons (car xs) (force-stream+ (cdr xs))))))
 
-#| Stream a → Stream a → Stream a |#
-(define (mplus xs ys)
-  (cond
-    ((null? xs) ys)
-    ((promise? xs) (delay/name (mplus ys (force xs))))
-    (else (cons (car xs) (mplus ys (cdr xs))))))
-
-#| Stream a → (a → Stream b) → Stream b |#
-(define (bind xs f)
-  (cond
-    ((null? xs) '())
-    ((promise? xs) (delay/name (bind (force xs) f)))
-    (else (mplus (f (car xs)) (bind (cdr xs) f)))))
-
 #| [a] → Stream a |#
 (define-syntax stream+
   (syntax-rules ()
-    ((_) '())
+    ((_) (delay/name '()))
     ((_ x xs ...) (stream+-cons x (stream+ xs ...)))))
