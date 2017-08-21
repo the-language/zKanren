@@ -14,8 +14,11 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide sized mplus+ disj0 conj0)
+(provide $ sized mplus+ disj0 conj0)
 (require "stream.rkt")
+
+#| a → ((a → b) → b) |#
+(define (($ x) f) (f x))
 
 #| Nat → a → Promise+ a |#
 (define-syntax-rule (sized n x) (raw-sized n (delay/name x)))
@@ -42,3 +45,6 @@
 #| Goal0 → Goal0 → Goal0 |#
 (define ((disj0 g1 g2) s) (mplus (g1 s) (g2 s)))
 (define ((conj0 g1 g2) s) (bind (g1 s) g2))
+
+#| [Goal0] → Goal0 |#
+(define ((disj0+ gs) s) (mplus+ (map ($ s) gs)))
