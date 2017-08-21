@@ -14,11 +14,15 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide fmap-n)
+(provide succ pred fmap-1 fmap-n force-n pack lift2+)
 (require "zk0.rkt")
 (require "conf.rkt")
 
 #| Size = Positive-Integer |#
+
+#| Num → Num |#
+(define (succ x) (+ 1 x))
+(define (pred x) (- x 1))
 
 #| Promise a → (a → b) → Promise b |#
 (define-syntax-rule (fmap-1 x f) (delay/name (f (force x))))
@@ -35,7 +39,20 @@
       [(promise? (car xs)) (fmap-1 (car xs) (λ (a) (loop (pred n) (cdr xs) (cons a ys) zs)))]
       [else (loop n (cdr xs) ys (cons (car xs) zs))])))
 
+#| Size → Promise+ a → Promise+ a |#
+(define (force-n n x)
+  (cond
+    [(zero? n) x]
+    [(promise? n) (force-n (pred n) x)]
+    [else x]))
+
+#| Promise+ a → Promise+ a |#
+(define-syntax-rule (pack x) (delay/name (force x)))
+
 #| Goal2 = Goal1 |#
 
 #| ([Goal1] → Goal1) → (Size → [Promise Goal2] → Goal2) |#
-(define ((lift2+ f) local-max-size gs) (fmap-n local-max-size gs (λ (n g0s g1s) (f (append g0s g1s)))))
+(define ((lift2+ f) local-max-size gs)
+  (pack
+   (force-n (length gs)
+            (fmap-n local-max-size gs (λ (n g0s g1s) (f (append g0s g1s)))))))
