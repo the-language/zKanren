@@ -14,7 +14,23 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide (struct-out constraint) (struct-out state))
+(provide
+ (struct-out constraint)
+ (struct-out state)
+ (struct-out state-patch)
+ define-constraints-cleaner
+ clean-constraints
+ hash-map+filter)
+
+#| Hash a b → (a → b → Maybe c) → Hash a c |#
+(define (hash-map+filter h f)
+  (let ([r (hash)])
+    (let loop ([iter (hash-iterate-first h)])
+      (cond
+        [(not iter) r]
+        [(let-values ([(k v) (hash-iterate-key+value h iter)])
+           (f k v)) => (λ (x) (hash-set! r k x) (loop (hash-iterate-next h iter)))]
+        [else (loop (hash-iterate-next h iter))]))))
 
 #| (State → Bool) → ID → Any → [Var] → Constraint |#
 (struct constraint (check kind parm vars))
@@ -28,6 +44,9 @@
 #| [State → Maybe State] |#
 (define cleanc '())
 
+(define-syntax-rule (define-constraints-cleaner (f state) body)
+  (set! cleanc (cons (λ (state) body) cleanc)))
+
 #| State → State |#
 (define (clean-constraints s)
   (let loop ([cs cleanc] [s s])
@@ -39,4 +58,6 @@
               (loop (cdr cleanc) s))))))
 
 #| State → Maybe State |#
-(define (run-constraints s) (error))
+(define (run-constraints s)
+  (state
+   
