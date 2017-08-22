@@ -14,24 +14,16 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(define (stream) (error))
-(define (stream-cons) (error))
-(require "zk.rkt")
-(require "stream.rkt")
-(require "prelude.rkt")
-(require "monad.rkt")
-(provide (all-defined-out))
+(provide new-id (struct-out var) new-var)
 
-#| State → Var → Maybe [Any] |#
-(define (get-d s v) (hash-ref (state-d s) v #f))
+#| Nat |#
+(define id-count 0)
+#| → Pos |#
+(define (new-id) (set! id-count (+ 1 id-count)) id-count)
 
-#| Var → [Any] → State → State |#
-(define (ext-d v d s) (state (state-s s)
-                             (hash-set (state-d s) v (append (or (get-d s v) '()) d))
-                             (state-c s)
-                             (state-v s)))
-
-#| [Any] → Var → Goal3 |#
-(define (domo d v)
-  (goal3 (goal1 (λ (s) (maybe->stream (check-constraints (ext-d v d s)))))
-         (goal3-u (membero v d))))
+#| Pos → Var |#
+(struct var (id))
+#| Nat |#
+(define var-count 0)
+#| → Var |#
+(define (new-var) (set! var-count (+ 1 var-count)) var-count)

@@ -14,7 +14,10 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(require "zk2-unfair.rkt")
-(provide (all-from-out "zk2-unfair.rkt"))
-;(require "zk2-fair.rkt")
-;(provide (all-from-out "zk2-fair.rkt"))
+(provide (struct-out constraint) (struct-out state))
+
+#| (State → Bool) → (State → Bool) → ID → Any → [Var] → Constraint |#
+(struct constraint (check delete kind parm vars))
+
+#| Vector Goal → Vector Constraint → State |#
+(struct state (g c))
