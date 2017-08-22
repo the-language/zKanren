@@ -14,8 +14,10 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide (struct-out state) empty-state walk)
+(provide var-count (struct-out state) empty-state walk)
 (require racket/struct)
+
+(define var-count 0)
 
 #| (s : Hash Var Any) → (d : Hash Var [Any]) → (c : [Constraint]) → (v : Nat) → State |#
 (struct state (s d c v))
