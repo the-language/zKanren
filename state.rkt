@@ -16,8 +16,8 @@
 #lang racket
 (provide (struct-out constraint) (struct-out state))
 
-#| (State → Bool) → (State → Bool) → ID → Any → [Var] → Constraint |#
-(struct constraint (check delete kind parm vars))
+#| (State → Bool) → ID → Any → [Var] → Constraint |#
+(struct constraint (check kind parm vars))
 
 #| Vector Goal → Hash ID (Vector Constraint) → State |#
 (struct state (g c))
@@ -35,8 +35,26 @@
            (f k v)) => (λ (x) (hash-set! r k x) (loop (hash-iterate-next h iter)))]
         [else (loop (hash-iterate-next h iter))]))))
 
+#| (Pos → a → Bool) → Vector a → Vector a |#
+(define (vector-filter+ f v)
+  (let ([l (vector-length v)])
+  (let loop ([i 0] [r '()])
+    (cond
+      [(<= l i) (list->vector r)]
+      [(let ([x (vector-ref v i)])
+         (f i x)) (loop (+ i 1) (cons x r))]
+      [else (loop (+ i 1) r)]))))
+
+#| Vector a → Pos → Vector a |#
+(define (vector-drop-at v i) (vector-append (vector-take i v) (vector-drop (+ i 1) v)))
+
 #| State → State |#
-(define (clean-constraints s) (error))
+(define (clean-constraints s)
+  (let ([s-c (state-c s)])
+  (state (state-g s)
+         (hash-map+filter s-c
+                          (λ (id constraints)
+                            (vector-filter+ (λ (i c) ((constraint-delete c)
 
 #| State → Maybe State |#
 (define (run-constraints s) (error))
