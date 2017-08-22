@@ -20,10 +20,10 @@
  (struct-out state-patch)
  define-constraints-cleaner
  clean-constraints
- hash-map+filter)
+ hash-map+filter-flip)
 
 #| Hash a b → (a → b → Maybe c) → Hash a c |#
-(define (hash-map+filter h f)
+(define (hash-map+filter-flip h f)
   (let ([r (hash)])
     (let loop ([iter (hash-iterate-first h)])
       (cond
@@ -60,4 +60,5 @@
 #| State → Maybe State |#
 (define (run-constraints s)
   (state
-   
+   (state-g s)
+   (
