@@ -14,12 +14,18 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide (struct-out agoal) (struct-out dgoal))
+(provide (struct-out agoal) (struct-out dgoal) run-goal)
 
 #| Goal = U AGoal DGoal |#
 
-#| Promise [StatePatch] → AGoal |#
+#| Promise StatePatch → AGoal |#
 (struct agoal (v));anonymous-goal
 
-#| ID → [Any] → Promise [StatePatch] → DGoal |#
+#| ID → [Any] → Promise StatePatch → DGoal |#
 (struct dgoal (id parm v));define-goal
+
+#| Goal → StatePatch |#
+(define (run-goal x)
+  (if (agoal? x)
+      (force (agoal-v x))
+      (force (dgoal-v x))))

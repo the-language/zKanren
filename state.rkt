@@ -18,13 +18,15 @@
  (struct-out constraint)
  (struct-out state)
  (struct-out state-patch)
- define-constraints-cleaner
- clean-constraints
+ define-state-cleaner
+ define-state-cleaner-lambda
+ clean-state
  hash-map+filter-flip
  check-constraints
  patch
  patch+
  )
+(require "stream.rkt")
 
 #| Hash a b → (a → b → Maybe c) → Hash a c |#
 (define (hash-map+filter-flip h f)
@@ -53,11 +55,13 @@
 #| [State → Maybe State] |#
 (define cleanc '())
 
-(define-syntax-rule (define-constraints-cleaner state body)
-  (set! cleanc (cons (λ (state) body) cleanc)))
+(define-syntax-rule (define-state-cleaner state body)
+  (define-state-cleaner-lambda (λ (state) body)))
+#| State → Maybe State → () |#
+(define (define-state-cleaner-lambda f) (set! cleanc (cons f cleanc)))
 
 #| State → State |#
-(define (clean-constraints s)
+(define (clean-state s)
   (let loop ([cs cleanc] [s s])
     (if (null? cs)
         s
@@ -97,4 +101,4 @@
 (define (patch+ s p)
   (if (null? p)
       (stream s)
-      (stream-append (patch s (car p)) (patch+ s (cdr p)))))
+      (stream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
