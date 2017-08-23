@@ -16,6 +16,7 @@
 #lang racket
 (provide check-states pass pass+)
 (require "state.rkt")
+(require "stream.rkt")
 (require "goal.rkt")
 
 (define-state-cleaner s
