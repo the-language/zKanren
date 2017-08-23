@@ -69,4 +69,9 @@
   (new-agoal
    (let loop ([gs gs] [rs '()])
      (if (null? gs)
-         (st
+         (state-patch rs)
+         (loop (cdr gs) (cons
+                         (if (constraint? (car gs))
+                             (values '() (list (car gs)))
+                             (values (list (car gs)) '()))
+                         rs))))))
