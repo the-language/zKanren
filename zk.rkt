@@ -26,6 +26,9 @@
  pass*
  pass*+
  call/fresh
+ all
+ conde
+ fresh
  )
 (require "state.rkt")
 (require "stream.rkt")
@@ -86,3 +89,10 @@
 
 #| (Var → U Constraint Goal) → U Constraint Goal |#
 (define (call/fresh f) (f (new-var)))
+
+(define (all . gs) (conj+ gs))
+(define-syntax-rule (conde ((g ...) ...)) (disj+ (list (all g ...) ...)))
+(define-syntax fresh
+  (syntax-rules ()
+    [(_ () (g ...)) (all g ...)]
+    [(_ (x0 x ...) gs) (call/fresh (λ (x0) (fresh (x ...) gs)))]))
