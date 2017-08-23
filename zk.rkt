@@ -62,6 +62,11 @@
   (new-agoal
    (let loop ([gs gs] [g '()] [c '()])
      (cond
-       [(null? gs) (state-patch g c)]
+       [(null? gs) (state-patch (values g c))]
        [(constraint? (car gs)) (loop (cdr gs) (cons (car gs) g) c)]
        [else (loop (cdr gs) g (cons (car gs) c))]))))
+(define (disj+ gs)
+  (new-agoal
+   (let loop ([gs gs] [rs '()])
+     (if (null? gs)
+         (st
