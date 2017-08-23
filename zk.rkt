@@ -14,7 +14,7 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide check-states pass pass+ define-relation)
+(provide check-states pass pass+ define-relation conj+ disj+)
 (require "state.rkt")
 (require "stream.rkt")
 (require "goal.rkt")
@@ -54,8 +54,10 @@
 (define (conj g1 g2) (new-agoal (state-patch (list (values (list g1 g2) '())))))
 
 (define-syntax-rule (define-relation (name args ...) body)
-  (let ([id (new-id)])
-    (define (name args ...) (new-dgoal id (list args ...) (run-goal body)))))
+  (begin
+    (require "id.rkt")
+    (let ([id (new-id)])
+      (define (name args ...) (new-dgoal id (list args ...) (run-goal body))))))
 
 #| [Goal] → Goal |#
 (define (conj+ gs)
