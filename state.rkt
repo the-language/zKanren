@@ -20,31 +20,40 @@
  (struct-out state-patch)
  define-constraints-cleaner
  clean-constraints
- hash-map+filter-flip)
+ hash-map+filter-flip
+ run-constraints
+ patch
+ patch+
+ )
 
 #| Hash a b → (a → b → Maybe c) → Hash a c |#
 (define (hash-map+filter-flip h f)
-  (let ([r (hash)])
+  (let ([r (make-hash)])
     (let loop ([iter (hash-iterate-first h)])
       (cond
         [(not iter) r]
         [(let-values ([(k v) (hash-iterate-key+value h iter)])
-           (f k v)) => (λ (x) (hash-set! r k x) (loop (hash-iterate-next h iter)))]
+           (f k v)) => (λ (x)
+                         (hash-set! r (hash-iterate-key h iter) x)
+                         (loop (hash-iterate-next h iter)))]
         [else (loop (hash-iterate-next h iter))]))))
 
-#| (State → Bool) → ID → Any → [Var] → Constraint |#
+#| (a → b → Bool) → Hash a b → Bool |#
+(define (hash-andmap f h) (andmap (λ (x) (f (car x) (cdr x))) (hash->list h)))
+
+#| (State → Bool) → ID → Any → Vector Var → Constraint |#
 (struct constraint (check kind parm vars))
 
-#| Vector Goal → Hash ID (Vector Constraint) → State |#
+#| [Goal] → Hash ID [Constraint] → State |#
 (struct state (g c))
 
-#| Vector (Values (Vector Goal Vector) Constraint) → StatePatch |#
-(struct state-patch (g c))
+#| [Values [Goal] [Constraint]] → StatePatch |#
+(struct state-patch (v))
 
 #| [State → Maybe State] |#
 (define cleanc '())
 
-(define-syntax-rule (define-constraints-cleaner (f state) body)
+(define-syntax-rule (define-constraints-cleaner state body)
   (set! cleanc (cons (λ (state) body) cleanc)))
 
 #| State → State |#
@@ -57,8 +66,38 @@
               (loop cleanc ns)
               (loop (cdr cleanc) s))))))
 
+#| State → Bool |#
+(define (check-constraints s)
+  (hash-andmap
+   (λ (id cs)
+     (andmap
+      (λ (c)
+        ((constraint-check c) s))
+      cs))
+   (state-c s)))
+
 #| State → Maybe State |#
-(define (run-constraints s)
-  (state
-   (state-g s)
-   (
+(define (run-constraints s) (and (check-constraints s) s))
+
+#| State → StatePatch → Stream State |#
+(define (patch s p) (patch- s (state-patch-v p)))
+
+#| State → [Values [Goal] [Constraint]] → Stream State |#
+(define (patch- s p)
+  (if (null? p)
+      (stream s)
+      (stream-cons (patch-- s (car p)) (patch- s (cdr p)))))
+
+#| State → Values [Goal] [Constraint] → State |#
+(define (patch-- s p)
+  (let-values ([(gs cs) p])
+    (let ([nc (hash-copy (state-c s))])
+      (for ([c cs])
+        (hash-update! nc (constraint-kind c) (λ (xs) (cons c xs)) '()))
+      (state (append gs (state-g s)) nc))))
+
+#| State → [StatePatch] → Stream State |#
+(define (patch+ s p)
+  (if (null? p)
+      (stream s)
+      (stream-append (patch s (car p)) (patch+ s (cdr p)))))
