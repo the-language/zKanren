@@ -22,6 +22,8 @@
  define-relation
  conj+
  disj+
+ pass*
+ pass*+
  )
 (require "state.rkt")
 (require "stream.rkt")
@@ -48,9 +50,14 @@
     (if (null? g)
         s
         (stream-filter check-constraints (stream-map clean-state (patch+ (state '() c) (map run-goal g)))))))
+(define (pass* s)
+  (if (null? (state-g s))
+      s
+      (pass* (pass s))))
 
 #| Stream State → Stream State |#
 (define (pass+ ss) (stream-bind ss pass))
+(define (pass*+ ss) (stream-bind ss pass*))
 
 (define-syntax-rule (define-relation (name args ...) body)
   (let ([id (new-id)])
