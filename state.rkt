@@ -21,7 +21,7 @@
  define-constraints-cleaner
  clean-constraints
  hash-map+filter-flip
- run-constraints
+ check-constraints
  patch
  patch+
  )
@@ -75,9 +75,6 @@
         ((constraint-check c) s))
       cs))
    (state-c s)))
-
-#| State → Maybe State |#
-(define (run-constraints s) (and (check-constraints s) s))
 
 #| State → StatePatch → Stream State |#
 (define (patch s p) (patch- s (state-patch-v p)))
