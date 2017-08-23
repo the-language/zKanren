@@ -30,19 +30,5 @@
       empty-stream
       (stream-mplus (stream-first xss) (stream-join (stream-rest xss)))))
 
-#|#| Stream (Stream a) → Stream a |#
-(define (stream-join xss)
-  (let loop ([xss xss] [yss empty-stream])
-    (if (stream-empty? xss)
-        (if (stream-empty? yss)
-            empty-stream
-            (loop yss empty-stream))
-        (let ([xs (stream-first xss)])
-          (if (stream-empty? xs)
-              (loop (stream-rest xss) yss)
-              (stream-cons (stream-first xs)
-                           (loop (stream-rest xss)
-                                 (stream-cons (stream-rest xs) yss))))))))|#
-
 #| Stream a → (a → Stream b) → Stream b |#
 (define (stream-bind xs f) (stream-join (stream-map f xs)))
