@@ -15,6 +15,7 @@
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
 (provide
+ (struct-out var)
  new-id
  check-states
  pass
@@ -24,6 +25,7 @@
  disj+
  pass*
  pass*+
+ call/fresh
  )
 (require "state.rkt")
 (require "stream.rkt")
@@ -81,3 +83,6 @@
                              (values '() (list (car gs)))
                              (values (list (car gs)) '()))
                          rs))))))
+
+#| (Var → U Constraint Goal) → U Constraint Goal |#
+(define (call/fresh f) (f (new-var)))
