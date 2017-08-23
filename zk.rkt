@@ -14,7 +14,7 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-
+(provide check-states pass pass+)
 (require "state.rkt")
 (require "goal.rkt")
 
@@ -38,3 +38,6 @@
     (if (null? g)
         s
         (stream-filter check-constraints (stream-map clean-state (patch+ (state '() c) (map run-goal g)))))))
+
+#| Stream State → Stream State |#
+(define (pass+ ss) (stream-bind ss pass))
