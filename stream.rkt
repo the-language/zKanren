@@ -15,6 +15,8 @@
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
 (provide
+ sizedstream
+ sizedstream-cons
  promise+-fmap-flip
  sizedstream-mplus
  sizedstream-join
@@ -34,6 +36,12 @@
       (f x)))
 
 #| SizedStream a = Promise+ (U () (a × SizedStream a))|#
+
+(define-syntax sizedstream
+  (syntax-rules ()
+    [(_) '()]
+    [(_ e) (sizedstream-cons e '())]
+    [(_ e0 e ...) (sizedstream-cons e0 (sizedstream e ...))]))
 
 #| a → SizedStream a → SizedStream a |#
 (define-syntax-rule (sizedstream-cons x xs) (cons x (delay xs)))

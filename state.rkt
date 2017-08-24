@@ -23,6 +23,7 @@
  define-state-cleaner-
  define-state-cleaner
  patch+
+ hash-andmap
  check-constraints
  )
 (require "constraint.rkt")
@@ -37,11 +38,11 @@
 #| State → StatePatch → Stream State |#
 (define (patch s p) (patch- s (state-patch-v p)))
 
-#| State → [Values [Goal] [Constraint]] → Stream State |#
+#| State → [Values [Goal] [Constraint]] → SizedStream State |#
 (define (patch- s ps)
   (if (null? ps)
-      (stream s)
-      (stream-cons (patch-- s (car ps)) (patch- s (cdr ps)))))
+      (sizedstream s)
+      (sizedstream-cons (patch-- s (car ps)) (patch- s (cdr ps)))))
 
 #| State → Values [Goal] [Constraint] → State |#
 (define (patch-- s p)
@@ -85,11 +86,14 @@
               (loop cleanc ns)
               (loop (cdr cleanc) s))))))
 
-#| State → [StatePatch] → Stream State |#
+#| State → [StatePatch] → SizedStream State |#
 (define (patch+ s p)
   (if (null? p)
-      (stream s)
-      (stream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
+      (sizedstream s)
+      (sizedstream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
+
+#| (k → v → Bool) → Hash k v → Bool |#
+(define (hash-andmap f h) (foldl (λ (x y) (and x y)) #t (hash-map f h)))
 
 #| State → Bool |#
 (define (check-constraints s)
