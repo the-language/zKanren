@@ -25,21 +25,24 @@
 (require "id.rkt")
 
 #| ConstraintV = Any |#
+#| ConstraintsV = Any |#
 
 #| ID →
+ConstraintsV →
 (ConstraintV → State → Maybe State) →
 (State → Bool) →
 (State → Maybe State) →
 (State → Symbol × [Any]) →
 Constraints |#
-(struct constraints (id add check clean show))
+(struct constraints (id empty add check clean show))
 
 #| (ConstraintV → State → Maybe State) →
+ConstraintsV →
 (State → Bool) →
 (State → Maybe State) →
 (State → Symbol × [Any]) →
 Constraints |#
-(define (new-constraints add check clean show) (constraints (new-id) add check clean show))
+(define (new-constraints empty add check clean show) (constraints (new-id) empty add check clean show))
 
 #| ID → ConstraintV → Constraint |#
 (struct constraint (type v))
@@ -51,9 +54,9 @@ Constraints |#
 (define (define-constraints- x) (hash-set! constraintss (constraints-id x) x))
 
 #| ID → Constraints |#
-(define (get-constraints id) (hash-ref constraintss is))
+(define (get-constraints id) (hash-ref constraintss id))
 
-(define-syntax-rule (define-constraints name add check clean show)
+(define-syntax-rule (define-constraints name empty add check clean show)
   (begin
-    (define name (new-constraints add check clean show))
+    (define name (new-constraints empty add check clean show))
     (define-constraints- name)))

@@ -18,12 +18,38 @@
  (struct-out state)
  (struct-out state-patch)
  )
+(require "constraint.rkt")
 
-#| [Goal] → Hash ID ConstraintV → State |#
+#| [Goal] → Hash ID ConstraintsV → State |#
 (struct state (g c))
 
 #| [Values [Goal] [Constraint]] → StatePatch |#
 (struct state-patch (v))
+
+#| State → StatePatch → Stream State |#
+(define (patch s p) (patch- s (state-patch-v p)))
+
+#| State → [Values [Goal] [Constraint]] → Stream State |#
+(define (patch- s ps)
+  (if (null? ps)
+      (stream s)
+      (stream-cons (patch-- s (car ps)) (patch- s (cdr ps)))))
+
+#| State → Values [Goal] [Constraint] → State |#
+(define (patch-- s p)
+  (let-values ([(gs cs) p])
+    (let ([nc (hash-copy (state-c s))])
+      (for ([c cs])
+        (let* ([t (constraint-type c)]
+               [constraints (get-constraints t)]
+               [empty (constraints-empty constraints)])
+        (hash-update!
+         nc
+         t
+         (λ (x) (or ((constraints-add constraints) x) empty))
+         empty)))
+      (state (append gs (state-g s)) nc))))
+
 
 #|
 (provide
