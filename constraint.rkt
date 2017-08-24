@@ -51,7 +51,11 @@ Constraints |#
 (define constraintss (make-hash))
 
 #| Constraints → () |#
-(define (define-constraints- x) (hash-set! constraintss (constraints-id x) x))
+(define (define-constraints- x)
+  (let ([id (constraints-id x)])
+    (if (hash-has-key? constraintss id)
+        (error 'define-constraints-)
+        (hash-set! constraintss id x))))
 
 #| ID → Constraints |#
 (define (get-constraints id) (hash-ref constraintss id))

@@ -17,6 +17,9 @@
 (provide
  (struct-out state)
  (struct-out state-patch)
+ patch
+ patch-
+ patch--
  )
 (require "constraint.rkt")
 
@@ -50,6 +53,28 @@
          empty)))
       (state (append gs (state-g s)) nc))))
 
+
+#| [State → Maybe State] |#
+(define cleanc
+  (list
+   (λ (s)
+     ((error 'c) (hash-map (state-c s)
+                           (λ (id c) (constraints-clean (get-constraints id))))))))
+
+(define-syntax-rule (define-state-cleaner state body)
+  (define-state-cleaner- (λ (state) body)))
+#| State → Maybe State → () |#
+(define (define-state-cleaner- f) (set! cleanc (cons f cleanc)))
+
+#| State → State |#
+(define (clean-state s)
+  (let loop ([cs cleanc] [s s])
+    (if (null? cs)
+        s
+        (let ([ns ((car cleanc) s)])
+          (if ns
+              (loop cleanc ns)
+              (loop (cdr cleanc) s))))))
 
 #|
 (provide
@@ -89,24 +114,6 @@
 
 #| [Values [Goal] [Constraint]] → StatePatch |#
 (struct state-patch (v))
-
-#| [State → Maybe State] |#
-(define cleanc '())
-
-(define-syntax-rule (define-state-cleaner state body)
-  (define-state-cleaner-lambda (λ (state) body)))
-#| State → Maybe State → () |#
-(define (define-state-cleaner-lambda f) (set! cleanc (cons f cleanc)))
-
-#| State → State |#
-(define (clean-state s)
-  (let loop ([cs cleanc] [s s])
-    (if (null? cs)
-        s
-        (let ([ns ((car cleanc) s)])
-          (if ns
-              (loop cleanc ns)
-              (loop (cdr cleanc) s))))))
 
 #| State → Bool |#
 (define (check-constraints s)
