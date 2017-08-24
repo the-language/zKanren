@@ -19,6 +19,7 @@
  (struct-out constraint)
  new-constraints
  define-constraints-
+ get-constraints
  define-constraints
  )
 (require "id.rkt")
@@ -48,6 +49,9 @@ Constraints |#
 
 #| Constraints → () |#
 (define (define-constraints- x) (hash-set! constraintss (constraints-id x) x))
+
+#| ID → Constraints |#
+(define (get-constraints id) (hash-ref constraintss is))
 
 (define-syntax-rule (define-constraints name add check clean show)
   (begin
