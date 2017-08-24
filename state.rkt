@@ -15,6 +15,18 @@
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
 (provide
+ (struct-out state)
+ (struct-out state-patch)
+ )
+
+#| [Goal] → Hash ID ConstraintV → State |#
+(struct state (g c))
+
+#| [Values [Goal] [Constraint]] → StatePatch |#
+(struct state-patch (v))
+
+#|
+(provide
  (struct-out constraint)
  (struct-out state)
  (struct-out state-patch)
@@ -102,3 +114,4 @@
   (if (null? p)
       (stream s)
       (stream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
+|#
