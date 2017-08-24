@@ -17,6 +17,7 @@
 (provide
  (struct-out constraints)
  (struct-out constraint)
+ define-constraints
  )
 
 #| ConstraintV = Any |#
@@ -29,5 +30,11 @@
 Constraints |#
 (struct constraints (id add check clean show))
 
-#| ID → ConstraintV |#
+#| ID → ConstraintV → Constraint |#
 (struct constraint (type v))
+
+#| Hash ID Constraints |#
+(define constraintss (make-hash))
+
+#| Constraints → () |#
+(define (define-constraints x) (hash-set! constraintss (constraints-id x) x))
