@@ -22,8 +22,11 @@
  patch--
  define-state-cleaner-
  define-state-cleaner
+ patch+
+ check-constraints
  )
 (require "constraint.rkt")
+(require "stream.rkt")
 
 #| [Goal] → Hash ID ConstraintsV → State |#
 (struct state (g c))
@@ -81,6 +84,18 @@
           (if ns
               (loop cleanc ns)
               (loop (cdr cleanc) s))))))
+
+#| State → [StatePatch] → Stream State |#
+(define (patch+ s p)
+  (if (null? p)
+      (stream s)
+      (stream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
+
+#| State → Bool |#
+(define (check-constraints s)
+  (hash-andmap
+   (λ (id cs) (constraints-check cs))
+   (state-c s)))
 
 #|
 (provide
@@ -148,9 +163,4 @@
         (hash-update! nc (constraint-kind c) (λ (xs) (cons c xs)) '()))
       (state (append gs (state-g s)) nc))))
 
-#| State → [StatePatch] → Stream State |#
-(define (patch+ s p)
-  (if (null? p)
-      (stream s)
-      (stream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
 |#

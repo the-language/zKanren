@@ -16,6 +16,14 @@
 #lang racket
 (provide stream-mplus- stream-mplus stream-join stream-bind)
 
+#| SizedStream a = U () (a × SizedStream a) Promise SizedStream a |#
+
+#| a → SizedStream a → SizedStream a |#
+(define-syntax-rule (sizedstream-cons x xs) (cons x (delay xs)))
+
+#| SizedStream a → U () (a × SizedStream a) |#
+(define (pull x) (if (promise? x) (pull (force x)) x))
+
 #| Stream a → Stream a → Stream a |#
 (define-syntax-rule (stream-mplus xs ys) (stream-mplus- xs (delay/name ys)))
 #| Stream a → Promise (Stream a) → Stream a |#
