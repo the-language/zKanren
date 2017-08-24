@@ -14,7 +14,7 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide stream-mplus stream-join stream-bind)
+(provide stream-mplus- stream-mplus stream-join stream-bind)
 
 #| Stream a → Stream a → Stream a |#
 (define-syntax-rule (stream-mplus xs ys) (stream-mplus- xs (delay/name ys)))

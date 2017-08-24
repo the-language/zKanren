@@ -58,7 +58,7 @@
 (define (pass* s)
   (if (null? (state-g s))
       s
-      (pass* (pass s))))
+      (stream-bind (pass s) pass*)))
 
 #| Stream State → Stream State |#
 (define (pass+ ss) (stream-bind ss pass))
