@@ -20,6 +20,8 @@
  patch
  patch-
  patch--
+ define-state-cleaner-
+ define-state-cleaner
  )
 (require "constraint.rkt")
 
@@ -58,8 +60,12 @@
 (define cleanc
   (list
    (λ (s)
-     ((error 'c) (hash-map (state-c s)
-                           (λ (id c) (constraints-clean (get-constraints id))))))))
+     (let loop ([b #f] [s s] [fs (hash-map (state-c s)
+                                           (λ (id c) (constraints-clean (get-constraints id))))])
+       (cond
+         [(null? fs) (and b s)]
+         [((car fs) s) => (λ (s) (loop #t s (cdr fs)))]
+         [else (loop b s fs)])))))
 
 (define-syntax-rule (define-state-cleaner state body)
   (define-state-cleaner- (λ (state) body)))
