@@ -14,9 +14,26 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide stream-mplus- stream-mplus stream-join stream-bind)
+(provide
+ promise+-fmap-flip
+ sizedstream-mplus
+ sizedstream-join
+ sizedstream-bind
+ sizedstream-map
+ )
 
-#| SizedStream a = U () (a × SizedStream a) Promise SizedStream a |#
+#| Promise+ a = U a (Promise (Promise+ a)) |#
+
+#| U (Promise a) a → Promise a |#
+(define-syntax-rule (pack x) (delay (force x)))
+
+#| Promise+ a → (a → b) → Promise+ b |#
+(define (promise+-fmap-flip x f)
+  (if (promise? x)
+      (delay (promise+-fmap-flip (force x) f))
+      (f x)))
+
+#| SizedStream a = Promise+ (U () (a × SizedStream a))|#
 
 #| a → SizedStream a → SizedStream a |#
 (define-syntax-rule (sizedstream-cons x xs) (cons x (delay xs)))
@@ -24,19 +41,37 @@
 #| SizedStream a → U () (a × SizedStream a) |#
 (define (pull x) (if (promise? x) (pull (force x)) x))
 
-#| Stream a → Stream a → Stream a |#
-(define-syntax-rule (stream-mplus xs ys) (stream-mplus- xs (delay/name ys)))
-#| Stream a → Promise (Stream a) → Stream a |#
-(define (stream-mplus- xs ys)
-  (if (stream-empty? xs)
-      (force ys)
-      (stream-cons (stream-first xs) (stream-mplus (force ys) (stream-rest xs)))))
+#| SizedStream a → Bool |#
+(define (sizedstream-empty? x) (null? (pull x)))
 
-#| Stream (Stream a) → Stream a |#
-(define (stream-join xss)
-  (if (stream-empty? xss)
-      empty-stream
-      (stream-mplus (stream-first xss) (stream-join (stream-rest xss)))))
+#| SizedStream a → a |#
+(define (sizedstream-car x) (car (pull x)))
 
-#| Stream a → (a → Stream b) → Stream b |#
-(define (stream-bind xs f) (stream-join (stream-map f xs)))
+#| SizedStream a → SizedStream a |#
+(define (sizedstream-cdr x) (cdr (pull x)))
+
+#| SizedStream a → SizedStream a → SizedStream a |#
+(define (sizedstream-mplus xs ys)
+  (cond
+    ((null? xs) ys)
+    ((promise? xs) (delay (sizedstream-mplus ys (force xs))))
+    (else (cons (car xs) (sizedstream-mplus ys (cdr xs))))))
+
+#| SizedStream (SizedStream a) → SizedStream a |#
+(define (sizedstream-join xss)
+  (promise+-fmap-flip xss
+                      (λ (xss)
+                        (if (null? xss)
+                            '()
+                            (sizedstream-mplus (car xss) (pack (sizedstream-join (cdr xss))))))))
+
+#| SizedStream a → (a → SizedStream b) → SizedStream b |#
+(define (sizedstream-bind xs f) (sizedstream-join (sizedstream-map f xs)))
+
+#| (a → b) → SizedStream a → SizedStream b |#
+(define (sizedstream-map f xs)
+  (promise+-fmap-flip xs
+                      (λ (xs)
+                        (if (null? xs)
+                            '()
+                            (cons (f (car xs)) (pack (sizedstream-map f (cdr xs))))))))
