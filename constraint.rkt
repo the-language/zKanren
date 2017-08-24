@@ -17,8 +17,11 @@
 (provide
  (struct-out constraints)
  (struct-out constraint)
+ new-constraints
+ define-constraints-
  define-constraints
  )
+(require "id.rkt")
 
 #| ConstraintV = Any |#
 
@@ -30,6 +33,13 @@
 Constraints |#
 (struct constraints (id add check clean show))
 
+#| (ConstraintV → State → Maybe State) →
+(State → Bool) →
+(State → Maybe State) →
+(State → Symbol × [Any]) →
+Constraints |#
+(define (new-constraints add check clean show) (constraints (new-id) add check clean show))
+
 #| ID → ConstraintV → Constraint |#
 (struct constraint (type v))
 
@@ -37,4 +47,9 @@ Constraints |#
 (define constraintss (make-hash))
 
 #| Constraints → () |#
-(define (define-constraints x) (hash-set! constraintss (constraints-id x) x))
+(define (define-constraints- x) (hash-set! constraintss (constraints-id x) x))
+
+(define-syntax-rule (define-constraints name add check clean show)
+  (begin
+    (define name (new-constraints add check clean show))
+    (define-constraints- name)))
