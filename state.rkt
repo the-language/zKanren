@@ -54,7 +54,7 @@
        (let ([vs '()] [s raws])
          (for ([c cs])
            (let* ([t (constraint-type c)]
-                  [constraints (get-constraints t)]
+                  [constraints (get-constraints- t)]
                   [nsv ((constraints-addv constraints) c s)])
              (if nsv
                  (let-values ([(ns nvs) nsv])
@@ -69,7 +69,7 @@
   (list
    (λ (s)
      (let loop ([b #f] [s s] [fs (hash-map (state-c s)
-                                           (λ (id c) (constraints-clean (get-constraints id))))])
+                                           (λ (id c) (constraints-clean (get-constraints- id))))])
        (cond
          [(null? fs) (and b s)]
          [((car fs) s) => (λ (s) (loop #t s (cdr fs)))]
@@ -99,5 +99,5 @@
 #| [Var] → State → Bool |#
 (define (check-constraints vs s)
   (hash-andmap
-   (λ (id cs) ((constraints-check (get-constraints id)) vs s))
+   (λ (id cs) ((constraints-check (get-constraints- id)) vs s))
    (state-c s)))

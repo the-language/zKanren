@@ -21,12 +21,12 @@
 (require "../zk.rkt")
 
 #| ConstraintsV = Hash Var Any |#
-#| ConstraintV = Maybe [Values Var Any] |#
+#| ConstraintV = Values Any Any |#
 
 #| a → Hash a a → a |#
 (define (walk x h) (hash-ref x h x))
 
-#| ConstraintsV → Any → Any → ConstraintV |#
+#| ConstraintsV → Any → Any → Maybe [Values Var Any] |#
 (define (unify cv x y)
   (let ([x (walk x cv)] [y (walk y cv)])
     (cond
@@ -40,6 +40,9 @@
       [else #f])))
 
 #| Any → Any → Constraint |#
-(define (== x y) (let ([xs 
+(define (== x y) (new-constraint ==c (values x y)))
 
-(define-constraints ==c (hash) 
+(define-constraints ==c
+  (hash)
+  (λ (cv s)
+    (let ([nc (unify

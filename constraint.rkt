@@ -21,7 +21,7 @@
  new-constraint
  define-constraints-
  define-constraints
- get-constraints
+ get-constraints-
  )
 (require "id.rkt")
 
@@ -62,7 +62,7 @@ Constraints |#
         (hash-set! constraintss id x))))
 
 #| ID → Constraints |#
-(define (get-constraints id) (hash-ref constraintss id))
+(define (get-constraints- id) (hash-ref constraintss id))
 
 (define-syntax-rule (define-constraints name empty add check clean show)
   (begin
