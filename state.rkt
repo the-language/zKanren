@@ -25,6 +25,8 @@
  clean-state
  patch+
  check-constraints
+ patch-vars
+ patch-vars+
  )
 (require "constraint.rkt")
 (require "stream.rkt")
@@ -98,3 +100,9 @@
   (hash-andmap
    (λ (id cs) ((constraints-check (get-constraints id)) vs s))
    (state-c s)))
+
+#| StatePatch → [Var] |#
+(define (patch-vars) (error))
+
+#| [StatePatch] → [Var] |#
+(define (patch-vars+) (error))
