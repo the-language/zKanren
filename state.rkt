@@ -89,7 +89,7 @@
               (loop cleanc ns)
               (loop (cdr cleanc) s))))))
 
-#| State → [StatePatch] → SizedStream State |#
+#| State → [StatePatch] → SizedStream (State × Var) |# ;;BUG
 (define (patch+ s p)
   (if (null? p)
       (sizedstream s)
