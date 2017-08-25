@@ -19,8 +19,8 @@
  (struct-out constraint)
  new-constraints
  define-constraints-
- get-constraints
  define-constraints
+ get-constraints
  )
 (require "id.rkt")
 

@@ -16,7 +16,6 @@
 #lang racket
 (provide
  (struct-out var)
- check-states
  pass
  pass+
  pass*
@@ -31,13 +30,21 @@
  all
  conde
  fresh
+ (struct-out constraints)
+ (struct-out constraint)
+ new-constraints
+ define-constraints-
+ define-constraints
+ (struct-out state)
+ (struct-out state-patch)
+ define-state-cleaner-
+ define-state-cleaner
  )
 (require "constraint.rkt")
 (require "state.rkt")
 (require "stream.rkt")
 (require "goal.rkt")
 (require "id.rkt")
-(require "hash.rkt")
 
 ;(define-state-cleaner s
 ;  (state (remove-duplicates (state-g s)) (state-c s)))

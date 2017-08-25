@@ -24,7 +24,6 @@
  define-state-cleaner
  clean-state
  patch+
- hash-andmap
  check-constraints
  )
 (require "constraint.rkt")
