@@ -28,6 +28,7 @@
  get-constraintsv
  empty-state
  set-constraintsv
+ new-state
  )
 (require "constraint.rkt")
 (require "stream.rkt")
@@ -113,3 +114,6 @@
 
 #| State → Constraints → ConstraintsV → State |#
 (define (set-constraintsv s cs v) (hash-set (state-c s) (constraints-id cs) v))
+
+#| Goal ... → State |#
+(define (new-state . gs) (state gs (hash)))
