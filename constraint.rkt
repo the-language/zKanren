@@ -64,7 +64,7 @@ Constraints |#
 #| ID → Constraints |#
 (define (get-constraints- id) (hash-ref constraintss id))
 
-(define-syntax-rule (define-constraints name empty add check clean show)
+(define-syntax-rule (define-constraints name empty addv check clean show)
   (begin
-    (define name (new-constraints empty add check clean show))
+    (define name (new-constraints empty addv check clean show))
     (define-constraints- name)))

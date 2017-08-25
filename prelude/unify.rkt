@@ -45,4 +45,13 @@
 (define-constraints ==c
   (hash)
   (λ (cv s)
-    (let ([nc (unify
+    (let-values ([(x y) cv])
+      (let* ([csv (get-constraintsv s ==c)] [nc (unify csv x y)])
+        (and nc (let loop ([csv csv] [nc nc] [vs '()])
+                  (if (null? nc)
+                      (values (set-constraintsv s ==c csv) vs)
+                      (let-values ([(v x) (car nc)])
+                        (loop (hash-set csv v x) (cdr nc) (cons v vs)))))))))
+  (λ (vs s) #t)
+  (λ (s) #f)
+  (λ (s) (cons '== (get-constraintsv s ==c))))

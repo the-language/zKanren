@@ -41,6 +41,8 @@
  define-state-cleaner-
  define-state-cleaner
  get-constraintsv
+ empty-state
+ set-constraintsv
  )
 (require "constraint.rkt")
 (require "state.rkt")

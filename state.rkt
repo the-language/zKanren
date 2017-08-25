@@ -26,6 +26,8 @@
  patch/check+
  check-constraints
  get-constraintsv
+ empty-state
+ set-constraintsv
  )
 (require "constraint.rkt")
 (require "stream.rkt")
@@ -105,3 +107,9 @@
 
 #| State → Constraints → ConstraintsV |#
 (define (get-constraintsv s cs) (hash-ref (state-c s) (constraints-id cs) (constraints-empty cs)))
+
+#| State |#
+(define empty-state (state '() (hash)))
+
+#| State → Constraints → ConstraintsV → State |#
+(define (set-constraintsv s cs v) (hash-set (state-c s) (constraints-id cs) v))
