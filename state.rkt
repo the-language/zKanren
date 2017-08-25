@@ -25,6 +25,7 @@
  clean-state
  patch/check+
  check-constraints
+ get-constraintsv
  )
 (require "constraint.rkt")
 (require "stream.rkt")
@@ -101,3 +102,6 @@
   (hash-andmap
    (λ (id cs) ((constraints-check (get-constraints- id)) vs s))
    (state-c s)))
+
+#| State → Constraints → ConstraintsV |#
+(define (get-constraintsv s cs) (hash-ref (state-c s) (constraints-id cs) (constraints-empty cs)))

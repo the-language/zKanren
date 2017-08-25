@@ -40,6 +40,7 @@
  (struct-out state-patch)
  define-state-cleaner-
  define-state-cleaner
+ get-constraintsv
  )
 (require "constraint.rkt")
 (require "state.rkt")
