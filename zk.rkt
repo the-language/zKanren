@@ -16,60 +16,65 @@
 #lang racket
 (provide
  (struct-out var)
- new-id
  check-states
  pass
  pass+
- define-relation
- conj+
- disj+
  pass*
  pass*+
+ goalf->dgoalf
+ define-relation
+ conj+-
+ conj+
+ disj+-
+ disj+
  call/fresh
  all
  conde
  fresh
  )
+(require "constraint.rkt")
 (require "state.rkt")
 (require "stream.rkt")
 (require "goal.rkt")
 (require "id.rkt")
 (require "hash.rkt")
 
-(define-state-cleaner s
-  (state (remove-duplicates (state-g s)) (state-c s)))
+;(define-state-cleaner s
+;  (state (remove-duplicates (state-g s)) (state-c s)))
 
 #| SizedStream State → SizedStream State |#
-(define (check-states ss) (stream-filter check-constraints ss))
+(define (check-states ss) (sizedstream-filter check-constraints ss))
 
-#| State → Stream State |#
+#| State → SizedStream State |#
 (define (pass s)
   (let ([g (state-g s)] [c (state-c s)])
     (if (null? g)
-        s
-        (stream-filter check-constraints (stream-map clean-state (patch+ (state '() c) (map run-goal g)))))))
+        (sizedstream s)
+        (check-states (stream-map clean-state (patch+ (state '() c) (map run-goal g)))))))
 (define (pass* s)
   (if (null? (state-g s))
-      s
-      (stream-bind (pass s) pass*)))
+      (sizedstream s)
+      (sizedstream-bind (pass s) pass*)))
 
-#| Stream State → Stream State |#
-(define (pass+ ss) (stream-bind ss pass))
-(define (pass*+ ss) (stream-bind ss pass*))
+#| SizedStream State → SizedStream State |#
+(define (pass+ ss) (sizedstream-bind ss pass))
+(define (pass*+ ss) (sizedstream-bind ss pass*))
+
+#| (... → Goal) → (... → DGoal) |#
+(define ((goalf->dgoalf f) . args) (new-dgoal (new-id) args (run-goal (apply f args))))
 
 (define-syntax-rule (define-relation (name args ...) body)
-  (let ([id (new-id)])
-      (define (name args ...) (new-dgoal id (list args ...) (run-goal body)))))
+  (define name (goalf->dgoalf (λ (args ...) body))))
 
 #| [U Constraint Goal] → Goal |#
-(define (conj+ gs)
+(define (conj+- gs)
   (new-agoal
    (let loop ([gs gs] [g '()] [c '()])
      (cond
        [(null? gs) (state-patch (values g c))]
        [(constraint? (car gs)) (loop (cdr gs) (cons (car gs) g) c)]
        [else (loop (cdr gs) g (cons (car gs) c))]))))
-(define (disj+ gs)
+(define (disj+- gs)
   (new-agoal
    (let loop ([gs gs] [rs '()])
      (if (null? gs)
@@ -80,11 +85,19 @@
                              (values (list (car gs)) '()))
                          rs))))))
 
-#| (Var → U Constraint Goal) → U Constraint Goal |#
+#| ([U Constraint Goal] → Goal) → ([Goal+] → Goal+) |#
+(define ((lift+ f) gs) (goal+ (f (map goal+-s gs)) (f (map goal+-u gs))))
+
+#| [Goal+] → Goal+ |#
+(define conj+ (lift+ conj+-))
+(define disj+ (lift+ disj+-))
+
+#| (Var → a) → a |#
 (define (call/fresh f) (f (new-var)))
 
 (define (all . gs) (conj+ gs))
-(define-syntax-rule (conde ((g ...) ...)) (disj+ (list (all g ...) ...)))
+(define-syntax-rule (conde (g0 g ...) (g0* g* ...) ...)
+  (disj+ (list (all g0 g ...) (all g0* g* ...) ...)))
 (define-syntax fresh
   (syntax-rules ()
     [(_ () (g ...)) (all g ...)]

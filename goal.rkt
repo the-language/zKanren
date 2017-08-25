@@ -14,7 +14,14 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide (struct-out agoal) (struct-out dgoal) new-agoal new-dgoal run-goal)
+(provide
+ (struct-out agoal)
+ (struct-out dgoal)
+ new-agoal
+ new-dgoal
+ run-goal
+ (struct-out goal+)
+ )
 
 #| Goal = U AGoal DGoal |#
 
@@ -33,3 +40,6 @@
   (if (agoal? x)
       (force (agoal-v x))
       (force (dgoal-v x))))
+
+#| U Constraint Goal → U Constraint Goal → Goal+ |#
+(struct goal+ (s u))

@@ -22,6 +22,7 @@
  sizedstream-join
  sizedstream-bind
  sizedstream-map
+ sizedstream-filter
  )
 
 #| Promise+ a = U a (Promise (Promise+ a)) |#
@@ -83,3 +84,13 @@
                         (if (null? xs)
                             '()
                             (cons (f (car xs)) (pack (sizedstream-map f (cdr xs))))))))
+
+#| (a → Bool) → SizedStream a → SizedStream a |#
+(define (sizedstream-filter f xs)
+  (promise+-fmap-flip
+   xs
+   (λ (xs)
+     (cond
+       [(null? xs) '()]
+       [(f (car xs)) (cons (car xs) (pack (sizedstream-filter f (cdr xs))))]
+       [else (pack (sizedstream-filter f (cdr xs)))]))))
