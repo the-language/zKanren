@@ -30,7 +30,7 @@
 #| ID →
 ConstraintsV →
 (ConstraintV → State → Maybe State) →
-(State → Bool) →
+([Var] → State → Bool) →
 (State → Maybe State) →
 (State → Symbol × [Any]) →
 Constraints |#
@@ -38,7 +38,7 @@ Constraints |#
 
 #| (ConstraintV → State → Maybe State) →
 ConstraintsV →
-(State → Bool) →
+([Var] → State → Bool) →
 (State → Maybe State) →
 (State → Symbol × [Any]) →
 Constraints |#

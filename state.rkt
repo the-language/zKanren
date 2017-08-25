@@ -93,8 +93,8 @@
       (sizedstream s)
       (sizedstream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
 
-#| State → Bool |#
-(define (check-constraints s)
+#| [Var] → State → Bool |#
+(define (check-constraints vs s)
   (hash-andmap
-   (λ (id cs) ((constraints-check (get-constraints id)) cs))
+   (λ (id cs) ((constraints-check (get-constraints id)) vs s))
    (state-c s)))
