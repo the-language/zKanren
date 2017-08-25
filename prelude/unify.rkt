@@ -14,18 +14,32 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide unify)
+(provide
+ ==c
+ ==
+ )
 (require "../zk.rkt")
 
-#| Any → Any → Unify |#
-(struct unify (a b))
-
 #| ConstraintsV = Hash Var Any |#
+#| ConstraintV = Maybe [Values Var Any] |#
 
-#| Any → ConstraintsV → Any |#
-(define (walk x cs) (hash-ref x cs x))
+#| a → Hash a a → a |#
+(define (walk x h) (hash-ref x h x))
 
-#| Any → Any → ConstraintsV |#
+#| ConstraintsV → Any → Any → ConstraintV |#
+(define (unify cv x y)
+  (let ([x (walk x cv)] [y (walk y cv)])
+    (cond
+      [(equal? x y) '()]
+      [(var? x) (list (values x y))]
+      [(var? y) (list (values y x))]
+      [(and (pair? x) (pair? y)) (let ([xs (unify cv (car x) (car y))] [ys (unify cv (cdr x) (cdr y))])
+                                   (and xs ys (append xs ys)))]
+      [(and (vector? x) (vector? y)) (unify cv (vector->list x) (vector->list y))]
+      [(and (struct? x) (struct? y)) (unify cv (struct->vector x) (struct->vector y))]
+      [else #f])))
 
+#| Any → Any → Constraint |#
+(define (== x y) (let ([xs 
 
 (define-constraints ==c (hash) 

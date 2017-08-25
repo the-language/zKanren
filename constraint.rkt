@@ -18,6 +18,7 @@
  (struct-out constraints)
  (struct-out constraint)
  new-constraints
+ new-constraint
  define-constraints-
  define-constraints
  get-constraints
@@ -29,23 +30,26 @@
 
 #| ID →
 ConstraintsV →
-(ConstraintV → State → Maybe State) →
+(ConstraintV → State → Maybe (Values State [Var])) →
 ([Var] → State → Bool) →
 (State → Maybe State) →
 (State → Symbol × [Any]) →
 Constraints |#
-(struct constraints (id empty add check clean show))
+(struct constraints (id empty addv check clean show))
 
-#| (ConstraintV → State → Maybe State) →
-ConstraintsV →
+#| ConstraintsV →
+(ConstraintV → State → Maybe (Values State [Var])) →
 ([Var] → State → Bool) →
 (State → Maybe State) →
 (State → Symbol × [Any]) →
 Constraints |#
-(define (new-constraints empty add check clean show) (constraints (new-id) empty add check clean show))
+(define (new-constraints empty addv check clean show) (constraints (new-id) empty addv check clean show))
 
-#| ID → [Var] → ConstraintV → Constraint |#
-(struct constraint (type vars v))
+#| ID → ConstraintV → Constraint |#
+(struct constraint (type v))
+
+#| Constraints → ConstraintV → Constraint |#
+(define (new-constraint cs v) (constraint (constraints-id cs) v))
 
 #| Hash ID Constraints |#
 (define constraintss (make-hash))

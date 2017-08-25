@@ -47,23 +47,22 @@
     [else (pack (patch/check- s (cdr ps)))]))
 
 #| State → Values [Goal] [Constraint] → Maybe State |#
-(define (patch/check-- s p)
-  (let-values ([(gs cs) p])
-    (let ([nc (hash-copy (state-c s))] [vs '()])
-      (for ([c cs])
-        (let* ([t (constraint-type c)]
-               [constraints (get-constraints t)]
-               [empty (constraints-empty constraints)])
-        (hash-update!
-         nc
-         t
-         (λ (x) (or ((constraints-add constraints) x) empty))
-         empty))
-        (set! vs (cons (constraint-vars c) vs))
-        )
-      (let ([s (state (append gs (state-g s)) nc)])
-        (and (check-constraints vs s) s)))))
-
+(define (patch/check-- raws p)
+  (call/cc
+   (λ (return)
+     (let-values ([(gs cs) p])
+       (let ([vs '()] [s raws])
+         (for ([c cs])
+           (let* ([t (constraint-type c)]
+                  [constraints (get-constraints t)]
+                  [nsv ((constraints-addv constraints) c s)])
+             (if nsv
+                 (let-values ([(ns nvs) nsv])
+                   (set! s ns)
+                   (set! vs (append nvs vs)))
+                 (return #f))))
+         (let ([s (state (append gs (state-g s)) (state-c s))])
+           (return (and (check-constraints vs s) s))))))))
 
 #| [State → Maybe State] |#
 (define cleanc

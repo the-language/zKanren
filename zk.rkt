@@ -33,6 +33,7 @@
  (struct-out constraints)
  (struct-out constraint)
  new-constraints
+ new-constraint
  define-constraints-
  define-constraints
  (struct-out state)

@@ -15,6 +15,7 @@
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
 (require "../zk.rkt")
+(require "unify.rkt")
 (provide (all-defined-out))
 
 (define (membero x xs)
