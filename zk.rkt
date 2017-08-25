@@ -50,7 +50,7 @@
 ;  (state (remove-duplicates (state-g s)) (state-c s)))
 
 #| SizedStream State → SizedStream State |#
-(define (check-states ss) (sizedstream-filter check-constraints ss))
+(define (check-states ss) (sizedstream-filter check-constraints ss));;BUG
 
 #| State → SizedStream State |#
 (define (pass s)
