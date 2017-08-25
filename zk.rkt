@@ -50,14 +50,14 @@
 ;  (state (remove-duplicates (state-g s)) (state-c s)))
 
 #| SizedStream State → SizedStream State |#
-(define (check-states ss) (sizedstream-filter check-constraints ss));;BUG
+(define (check-states ss) (sizedstream-filter check-constraints ss))
 
 #| State → SizedStream State |#
 (define (pass s)
   (let ([g (state-g s)] [c (state-c s)])
     (if (null? g)
         (sizedstream s)
-        (check-states (stream-map clean-state (patch+ (state '() c) (map run-goal g)))))));;BUG
+        (check-states (stream-map clean-state (patch/check+ (state '() c) (map run-goal g)))))))
 (define (pass* s)
   (if (null? (state-g s))
       (sizedstream s)

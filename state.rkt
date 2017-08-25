@@ -17,16 +17,14 @@
 (provide
  (struct-out state)
  (struct-out state-patch)
- patch
- patch-
- patch--
+ patch/check
+ patch/check-
+ patch/check--
  define-state-cleaner-
  define-state-cleaner
  clean-state
- patch+
+ patch/check+
  check-constraints
- patch-vars
- patch-vars+
  )
 (require "constraint.rkt")
 (require "stream.rkt")
@@ -39,18 +37,19 @@
 (struct state-patch (v))
 
 #| State → StatePatch → Stream State |#
-(define (patch s p) (patch- s (state-patch-v p)))
+(define (patch/check s p) (patch/check- s (state-patch-v p)))
 
 #| State → [Values [Goal] [Constraint]] → SizedStream State |#
-(define (patch- s ps)
-  (if (null? ps)
-      (sizedstream s)
-      (sizedstream-cons (patch-- s (car ps)) (patch- s (cdr ps)))))
+(define (patch/check- s ps)
+  (cond
+    [(null? ps) '()]
+    [(patch/check-- s (car ps)) => (λ (ns) (sizedstream-cons ns (pack (patch/check- s (cdr ps)))))]
+    [else (pack (patch/check- s (cdr ps)))]))
 
-#| State → Values [Goal] [Constraint] → State |#
-(define (patch-- s p)
+#| State → Values [Goal] [Constraint] → Maybe State |#
+(define (patch/check-- s p)
   (let-values ([(gs cs) p])
-    (let ([nc (hash-copy (state-c s))])
+    (let ([nc (hash-copy (state-c s))] [vs '()])
       (for ([c cs])
         (let* ([t (constraint-type c)]
                [constraints (get-constraints t)]
@@ -59,8 +58,11 @@
          nc
          t
          (λ (x) (or ((constraints-add constraints) x) empty))
-         empty)))
-      (state (append gs (state-g s)) nc))))
+         empty))
+        (set! vs (cons (constraint-vars c) vs))
+        )
+      (let ([s (state (append gs (state-g s)) nc)])
+        (and (check-constraints vs s) s)))))
 
 
 #| [State → Maybe State] |#
@@ -89,20 +91,14 @@
               (loop cleanc ns)
               (loop (cdr cleanc) s))))))
 
-#| State → [StatePatch] → SizedStream (State × Var) |# ;;BUG
-(define (patch+ s p)
+#| State → [StatePatch] → SizedStream State |#
+(define (patch/check+ s p)
   (if (null? p)
       (sizedstream s)
-      (sizedstream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
+      (sizedstream-bind (patch/check s (car p)) (λ (ns) (patch/check+ ns (cdr p))))))
 
 #| [Var] → State → Bool |#
 (define (check-constraints vs s)
   (hash-andmap
    (λ (id cs) ((constraints-check (get-constraints id)) vs s))
    (state-c s)))
-
-#| StatePatch → [Var] |#
-(define (patch-vars) (error))
-
-#| [StatePatch] → [Var] |#
-(define (patch-vars+) (error))

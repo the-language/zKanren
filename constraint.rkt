@@ -44,8 +44,8 @@ ConstraintsV →
 Constraints |#
 (define (new-constraints empty add check clean show) (constraints (new-id) empty add check clean show))
 
-#| ID → ConstraintV → Constraint |#
-(struct constraint (type v))
+#| ID → [Var] → ConstraintV → Constraint |#
+(struct constraint (type vars v))
 
 #| Hash ID Constraints |#
 (define constraintss (make-hash))
