@@ -28,6 +28,7 @@
  )
 (require "constraint.rkt")
 (require "stream.rkt")
+(require "hash.rkt")
 
 #| [Goal] → Hash ID ConstraintsV → State |#
 (struct state (g c))
@@ -91,9 +92,6 @@
   (if (null? p)
       (sizedstream s)
       (sizedstream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
-
-#| (k → v → Bool) → Hash k v → Bool |#
-(define (hash-andmap f h) (foldl (λ (x y) (and x y)) #t (hash-map f h)))
 
 #| State → Bool |#
 (define (check-constraints s)

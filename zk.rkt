@@ -34,19 +34,12 @@
 (require "stream.rkt")
 (require "goal.rkt")
 (require "id.rkt")
+(require "hash.rkt")
 
 (define-state-cleaner s
   (state (remove-duplicates (state-g s)) (state-c s)))
 
-(define-state-cleaner s
-  (state (state-g s) (hash-map+filter-flip (state-c s)
-                                           (λ (id cs)
-                                             (let ([ncs (remove-duplicates cs)])
-                                               (if (null? ncs)
-                                                   #f
-                                                   ncs))))))
-
-#| Stream State → Stream State |#
+#| SizedStream State → SizedStream State |#
 (define (check-states ss) (stream-filter check-constraints ss))
 
 #| State → Stream State |#
