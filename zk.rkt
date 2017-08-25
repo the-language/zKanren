@@ -107,5 +107,5 @@
   (disj+ (list (all g0 g ...) (all g0* g* ...) ...)))
 (define-syntax fresh
   (syntax-rules ()
-    [(_ () (g ...)) (all g ...)]
-    [(_ (x0 x ...) gs) (call/fresh (λ (x0) (fresh (x ...) gs)))]))
+    [(_ () g ...) (all g ...)]
+    [(_ (x0 x ...) g ...) (call/fresh (λ (x0) (fresh (x ...) g ...)))]))
