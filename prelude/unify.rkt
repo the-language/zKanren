@@ -14,11 +14,18 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-
+(provide unify)
 (require "../zk.rkt")
-
 
 #| Any → Any → Unify |#
 (struct unify (a b))
 
 #| ConstraintsV = Hash Var Any |#
+
+#| Any → ConstraintsV → Any |#
+(define (walk x cs) (hash-ref x cs x))
+
+#| Any → Any → ConstraintsV |#
+
+
+(define-constraints ==c (hash) 

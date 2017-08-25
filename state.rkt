@@ -96,5 +96,5 @@
 #| State → Bool |#
 (define (check-constraints s)
   (hash-andmap
-   (λ (id cs) (constraints-check cs))
+   (λ (id cs) ((constraints-check (get-constraints id)) cs))
    (state-c s)))
