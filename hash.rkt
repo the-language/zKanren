@@ -30,4 +30,4 @@
 
 
 #| (k → v → Bool) → Hash k v → Bool |#
-(define (hash-andmap f h) (foldl (λ (x y) (and x y)) #t (hash-map f h)))
+(define (hash-andmap f h) (foldl (λ (x y) (and x y)) #t (hash-map h f)))
