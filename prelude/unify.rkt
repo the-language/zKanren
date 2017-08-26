@@ -24,8 +24,11 @@
 #| ConstraintsV = Hash Var Any |#
 #| ConstraintV = Any × Any |#
 
-#| a → Hash a a → a |#
-(define (walk x h) (hash-ref x h x))
+#| U Var a → Hash Var a → U Var a |#
+(define (walk x h)
+  (if (var? x)
+      (hash-ref x h x)
+      x))
 
 #| ConstraintsV → Any → Any → Maybe [Var × Any] |#
 (define (unify cv x y)
