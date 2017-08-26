@@ -21,6 +21,7 @@
  new-dgoal
  run-goal
  (struct-out goal+)
+ noto
  )
 
 #| Goal = U AGoal DGoal |#
@@ -43,3 +44,6 @@
 
 #| U Constraint Goal → U Constraint Goal → Goal+ |#
 (struct goal+ (s u))
+
+#| Goal+ → Goal+ |#
+(define (noto g) (goal+ (goal+-s g) (goal+-u g)))
