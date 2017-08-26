@@ -24,6 +24,8 @@
  sizedstream-bind
  sizedstream-map
  sizedstream-filter
+ sizedstream->list
+ sizedstream-take
  )
 
 #| Promise+ a = U a (Promise (Promise+ a)) |#
@@ -95,3 +97,19 @@
        [(null? xs) '()]
        [(f (car xs)) (cons (car xs) (pack (sizedstream-filter f (cdr xs))))]
        [else (pack (sizedstream-filter f (cdr xs)))]))))
+
+#| SizedStream a → [a] |#
+(define (sizedstream->list xs)
+  (let ([xs (pull xs)])
+    (if (null? xs)
+        '()
+        (cons (car xs) (sizedstream->list (cdr xs))))))
+
+#| Pos → SizedStream a → [a] |#
+(define (sizedstream-take n xs)
+  (if (zero? n)
+      '()
+      (let ([xs (pull xs)])
+        (if (null? xs)
+            '()
+            (cons (car xs) (sizedstream-take (- n 1) (cdr xs)))))))
