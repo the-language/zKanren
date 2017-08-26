@@ -30,6 +30,8 @@
  set-constraintsv
  new-state
  new-state+
+ s+c
+ s+c+
  )
 (require "constraint.rkt")
 (require "stream.rkt")

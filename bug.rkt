@@ -13,4 +13,9 @@
 (define sp (run-goal g))
 (set! sp (state-patch-vs sp))
 (set! sp (car sp))
-(patch-- (state '() (hash)) sp) ;;=>#f ;;BUG
+;(patch-- (state '() (hash)) sp) ;;=>#f ;;BUG
+(define gs (state-patch1-gs sp))
+(define cs (state-patch1-cs sp))
+(define ns (state '() (hash)))
+(define nns (state (append gs (state-g ns)) (state-c ns)))
+(s+c cs nns) ;;=>#f ;;BUG
