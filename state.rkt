@@ -16,17 +16,17 @@
 #lang racket
 (provide
  (struct-out state)
+ (struct-out state-patch1)
  (struct-out state-patch)
- patch/check
- patch/check-
- patch/check--
+ patch
+ patch-
+ patch--
  define-state-cleaner-
  define-state-cleaner
  clean-state
- patch/check+
+ patch+
  check-constraints
  get-constraintsv
- empty-state
  set-constraintsv
  new-state
  )
@@ -37,24 +37,27 @@
 #| [Goal] → Hash ID ConstraintsV → State |#
 (struct state (g c))
 
-#| [Values [Goal] [Constraint]] → StatePatch |#
-(struct state-patch (v))
+#| [Goal] → [Constraint] → StatePatch1 |#
+(struct state-patch1 (gs cs))
+
+#| [StatePatch1] → StatePatch |#
+(struct state-patch (vs))
 
 #| State → StatePatch → Stream State |#
-(define (patch/check s p) (patch/check- s (state-patch-v p)))
+(define (patch s p) (patch- s (state-patch-vs p)))
 
-#| State → [Values [Goal] [Constraint]] → SizedStream State |#
-(define (patch/check- s ps)
+#| State → [StatePatch1] → SizedStream State |#
+(define (patch- s ps)
   (cond
     [(null? ps) '()]
-    [(patch/check-- s (car ps)) => (λ (ns) (sizedstream-cons ns (pack (patch/check- s (cdr ps)))))]
-    [else (pack (patch/check- s (cdr ps)))]))
+    [(patch-- s (car ps)) => (λ (ns) (sizedstream-cons ns (pack (patch- s (cdr ps)))))]
+    [else (pack (patch- s (cdr ps)))]))
 
-#| State → Values [Goal] [Constraint] → Maybe State |#
-(define (patch/check-- raws p)
+#| State → StatePatch1 → Maybe State |#
+(define (patch-- raws p)
   (call/cc
    (λ (return)
-     (let-values ([(gs cs) p])
+     (let ([gs (state-patch1-gs p)] [cs (state-patch1-cs p)])
        (let ([vs '()] [s raws])
          (for ([c cs])
            (let* ([t (constraint-type c)]
@@ -95,10 +98,10 @@
               (loop (cdr cleanc) s))))))
 
 #| State → [StatePatch] → SizedStream State |#
-(define (patch/check+ s p)
+(define (patch+ s p)
   (if (null? p)
       (sizedstream s)
-      (sizedstream-bind (patch/check s (car p)) (λ (ns) (patch/check+ ns (cdr p))))))
+      (sizedstream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
 
 #| [Var] → State → Bool |#
 (define (check-constraints vs s)
@@ -108,9 +111,6 @@
 
 #| State → Constraints → ConstraintsV |#
 (define (get-constraintsv s cs) (hash-ref (state-c s) (constraints-id cs) (constraints-empty cs)))
-
-#| State |#
-(define empty-state (state '() (hash)))
 
 #| State → Constraints → ConstraintsV → State |#
 (define (set-constraintsv s cs v) (hash-set (state-c s) (constraints-id cs) v))

@@ -21,18 +21,18 @@
 (require "../zk.rkt")
 
 #| ConstraintsV = Hash Var Any |#
-#| ConstraintV = Values Any Any |#
+#| ConstraintV = Any × Any |#
 
 #| a → Hash a a → a |#
 (define (walk x h) (hash-ref x h x))
 
-#| ConstraintsV → Any → Any → Maybe [Values Var Any] |#
+#| ConstraintsV → Any → Any → Maybe [Var × Any] |#
 (define (unify cv x y)
   (let ([x (walk x cv)] [y (walk y cv)])
     (cond
       [(equal? x y) '()]
-      [(var? x) (list (values x y))]
-      [(var? y) (list (values y x))]
+      [(var? x) (list (cons x y))]
+      [(var? y) (list (cons y x))]
       [(and (pair? x) (pair? y)) (let ([xs (unify cv (car x) (car y))] [ys (unify cv (cdr x) (cdr y))])
                                    (and xs ys (append xs ys)))]
       [(and (vector? x) (vector? y)) (unify cv (vector->list x) (vector->list y))]
@@ -40,18 +40,22 @@
       [else #f])))
 
 #| Any → Any → Constraint |#
-(define (== x y) (new-constraint ==c (values x y)))
+(define (==- x y) (new-constraint ==c (cons x y)))
+
+#| Any → Any → Goal+ |#
+(define (== x y) (goal+ (==- x y) (==- x y)));;u:BUG
 
 (define-constraints ==c
   (hash)
   (λ (cv s)
-    (let-values ([(x y) cv])
+    (let ([x (car cv)] [y (cdr cv)])
       (let* ([csv (get-constraintsv s ==c)] [nc (unify csv x y)])
         (and nc (let loop ([csv csv] [nc nc] [vs '()])
                   (if (null? nc)
                       (values (set-constraintsv s ==c csv) vs)
-                      (let-values ([(v x) (car nc)])
-                        (loop (hash-set csv v x) (cdr nc) (cons v vs)))))))))
+                      (let ([a (car nc)])
+                        (let ([v (car a)] [x (cdr a)])
+                          (loop (hash-set csv v x) (cdr nc) (cons v vs))))))))))
   (λ (vs s) #t)
   (λ (s) #f)
   (λ (s) (cons '== (get-constraintsv s ==c))))

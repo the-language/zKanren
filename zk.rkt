@@ -37,14 +37,14 @@
  define-constraints-
  define-constraints
  (struct-out state)
- (struct-out state-patch)
  define-state-cleaner-
  define-state-cleaner
  get-constraintsv
- empty-state
  set-constraintsv
  new-state
  run-
+ run-+
+ (struct-out goal+)
  noto
  )
 (require "constraint.rkt")
@@ -64,7 +64,7 @@
   (let ([g (state-g s)] [c (state-c s)])
     (if (null? g)
         (sizedstream s)
-        (check-states (stream-map clean-state (patch/check+ (state '() c) (map run-goal g)))))))
+        (check-states (stream-map clean-state (patch+ (state '() c) (map run-goal g)))))))
 (define (pass* s)
   (if (null? (state-g s))
       (sizedstream s)
@@ -78,6 +78,9 @@
 (define (run- g)
   (sizedstream-map state-c (pass* (new-state g))))
 
+#| Goal+ → SizedStream (Hash ID ConstraintsV) |#
+(define (run-+ g) (run- (goal+-s g)))
+
 #| (... → Goal) → (... → DGoal) |#
 (define ((goalf->dgoalf f) . args) (new-dgoal (new-id) args (run-goal (apply f args))))
 
@@ -89,7 +92,7 @@
   (new-agoal
    (let loop ([gs gs] [g '()] [c '()])
      (cond
-       [(null? gs) (state-patch (values g c))]
+       [(null? gs) (state-patch (list (state-patch1 g c)))]
        [(constraint? (car gs)) (loop (cdr gs) (cons (car gs) g) c)]
        [else (loop (cdr gs) g (cons (car gs) c))]))))
 (define (disj+- gs)
@@ -99,8 +102,8 @@
          (state-patch rs)
          (loop (cdr gs) (cons
                          (if (constraint? (car gs))
-                             (values '() (list (car gs)))
-                             (values (list (car gs)) '()))
+                             (state-patch1 '() (list (car gs)))
+                             (state-patch1 (list (car gs)) '()))
                          rs))))))
 
 #| ([U Constraint Goal] → Goal) → ([Goal+] → Goal+) |#
