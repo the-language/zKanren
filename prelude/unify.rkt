@@ -37,6 +37,7 @@
                                    (and xs ys (append xs ys)))]
       [(and (vector? x) (vector? y)) (unify cv (vector->list x) (vector->list y))]
       [(and (struct? x) (struct? y)) (unify cv (struct->vector x) (struct->vector y))]
+      [(and (hash? x) (hash? y)) (unify cv (hash->list x) (hash->list y))]
       [else #f])))
 
 #| Any → Any → Constraint |#
