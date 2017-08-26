@@ -29,6 +29,7 @@
  get-constraintsv
  set-constraintsv
  new-state
+ new-state+
  )
 (require "constraint.rkt")
 (require "stream.rkt")
@@ -54,22 +55,32 @@
     [else (pack (patch- s (cdr ps)))]))
 
 #| State → StatePatch1 → Maybe State |#
-(define (patch-- raws p)
+(define (patch-- s p)
+  (let ([gs (state-patch1-gs p)] [cs (state-patch1-cs p)])
+    (s+c+ cs (state (append gs (state-g s)) (state-c s)))))
+
+#| [Constraint] → State → Maybe (State × [Var]) |#
+(define (s+c cs s)
   (call/cc
    (λ (return)
-     (let ([gs (state-patch1-gs p)] [cs (state-patch1-cs p)])
-       (let ([vs '()] [s raws])
-         (for ([c cs])
-           (let* ([t (constraint-type c)]
-                  [constraints (get-constraints- t)]
-                  [nsv ((constraints-addv constraints) c s)])
-             (if nsv
-                 (let-values ([(ns nvs) nsv])
-                   (set! s ns)
-                   (set! vs (append nvs vs)))
-                 (return #f))))
-         (let ([s (state (append gs (state-g s)) (state-c s))])
-           (return (and (check-constraints vs s) s))))))))
+     (let ([s s] [vs '()])
+       (for ([c cs])
+         (let* ([t (constraint-type c)]
+                [constraints (get-constraints- t)]
+                [nsv ((constraints-addv constraints) c s)])
+           (if nsv
+               (let-values ([(ns nvs) nsv])
+                 (set! s ns)
+                 (set! vs (append nvs vs)))
+               (return #f))))
+       (return (cons s vs))))))
+
+#| [Constraint] → State → Maybe State |#
+(define (s+c+ cs s)
+  (let ([nsv (s+c cs s)])
+    (and nsv
+         (let ([s (car nsv)] [vs (cdr nsv)])
+           (and (check-constraints vs s) s)))))
 
 #| [State → Maybe State] |#
 (define cleanc
@@ -117,3 +128,8 @@
 
 #| Goal ... → State |#
 (define (new-state . gs) (state gs (hash)))
+
+#| U Goal Constraint ... → State |#
+(define (new-state+ . gs)
+  (let-values ([(c g) (partition constraint? gs)])
+               (s+c+ c (state g (hash)))))

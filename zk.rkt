@@ -71,9 +71,9 @@
 (define (pass+ ss) (sizedstream-bind ss pass))
 (define (pass*+ ss) (sizedstream-bind ss pass*))
 
-#| Goal → SizedStream (Hash ID ConstraintsV) |#
+#| U Constraint Goal → SizedStream (Hash ID ConstraintsV) |#
 (define (run- g)
-  (sizedstream-map state-c (pass* (new-state g))))
+  (sizedstream-map state-c (pass* (new-state+ g))))
 
 #| Goal+ → SizedStream (Hash ID ConstraintsV) |#
 (define (run-+ g) (run- (goal+-s g)))

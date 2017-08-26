@@ -38,7 +38,7 @@ Constraints |#
 (struct constraints (id empty addv check clean show))
 
 #| ConstraintsV →
-(ConstraintV → State → Maybe (Values State [Var])) →
+(ConstraintV → State → Maybe (Values State [Var])) →;;BUG
 ([Var] → State → Bool) →
 (State → Maybe State) →
 (State → Symbol × [Any]) →
