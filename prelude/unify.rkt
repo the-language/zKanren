@@ -27,7 +27,7 @@
 #| U Var a → Hash Var a → U Var a |#
 (define (walk x h)
   (if (var? x)
-      (hash-ref x h x)
+      (hash-ref h x x)
       x))
 
 #| ConstraintsV → Any → Any → Maybe [Var × Any] |#
