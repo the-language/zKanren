@@ -19,6 +19,7 @@
  ==
  )
 (require "../zk.rkt")
+(require racket/struct)
 
 #| ConstraintsV = Hash Var Any |#
 #| ConstraintV = Any × Any |#
@@ -33,11 +34,11 @@
       [(equal? x y) '()]
       [(var? x) (list (cons x y))]
       [(var? y) (list (cons y x))]
-      [(and (pair? x) (pair? y)) (let ([xs (unify cv (car x) (car y))] [ys (unify cv (cdr x) (cdr y))])
-                                   (and xs ys (append xs ys)))]
-      [(and (vector? x) (vector? y)) (unify cv (vector->list x) (vector->list y))]
-      [(and (struct? x) (struct? y)) (unify cv (struct->vector x) (struct->vector y))]
-      [(and (hash? x) (hash? y)) (unify cv (hash->list x) (hash->list y))]
+      [(pair? x) (and (pair? y) (let ([xs (unify cv (car x) (car y))] [ys (unify cv (cdr x) (cdr y))])
+                                  (and xs ys (append xs ys))))]
+      [(vector? x) (and (vector? y) (unify cv (vector->list x) (vector->list y)))]
+      [(struct? x) (and (struct? y) (unify cv (struct->list x) (struct->list y)))]
+      [(hash? x) (and (hash? y) (unify cv (hash->list x) (hash->list y)))]
       [else #f])))
 
 #| Any → Any → Constraint |#
