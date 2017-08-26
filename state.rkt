@@ -67,9 +67,9 @@
        (for ([c cs])
          (let* ([t (constraint-type c)]
                 [constraints (get-constraints- t)]
-                [nsv ((constraints-addv constraints) c s)])
+                [nsv ((constraints-add constraints) c s)])
            (if nsv
-               (let-values ([(ns nvs) nsv])
+               (let ([ns (car nsv)] [nvs (cdr nsv)])
                  (set! s ns)
                  (set! vs (append nvs vs)))
                (return #f))))

@@ -52,7 +52,7 @@
       (let* ([csv (get-constraintsv s ==c)] [nc (unify csv x y)])
         (and nc (let loop ([csv csv] [nc nc] [vs '()])
                   (if (null? nc)
-                      (values (set-constraintsv s ==c csv) vs)
+                      (cons (set-constraintsv s ==c csv) vs)
                       (let ([a (car nc)])
                         (let ([v (car a)] [x (cdr a)])
                           (loop (hash-set csv v x) (cdr nc) (cons v vs))))))))))

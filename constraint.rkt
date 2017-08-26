@@ -30,20 +30,20 @@
 
 #| ID →
 ConstraintsV →
-(ConstraintV → State → Maybe (Values State [Var])) →
+(ConstraintV → State → Maybe (State × [Var])) →
 ([Var] → State → Bool) →
 (State → Maybe State) →
 (State → Symbol × [Any]) →
 Constraints |#
-(struct constraints (id empty addv check clean show))
+(struct constraints (id empty add check clean show))
 
 #| ConstraintsV →
-(ConstraintV → State → Maybe (Values State [Var])) →;;BUG
+(ConstraintV → State → Maybe (State × [Var])) →
 ([Var] → State → Bool) →
 (State → Maybe State) →
 (State → Symbol × [Any]) →
 Constraints |#
-(define (new-constraints empty addv check clean show) (constraints (new-id) empty addv check clean show))
+(define (new-constraints empty add check clean show) (constraints (new-id) empty add check clean show))
 
 #| ID → ConstraintV → Constraint |#
 (struct constraint (type v))
@@ -64,7 +64,7 @@ Constraints |#
 #| ID → Constraints |#
 (define (get-constraints- id) (hash-ref constraintss id))
 
-(define-syntax-rule (define-constraints name empty addv check clean show)
+(define-syntax-rule (define-constraints name empty add check clean show)
   (begin
-    (define name (new-constraints empty addv check clean show))
+    (define name (new-constraints empty add check clean show))
     (define-constraints- name)))
