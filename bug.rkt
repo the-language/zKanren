@@ -8,3 +8,9 @@
 (require "zk.rkt")
 (require "prelude/unify.rkt")
 (require "prelude/prelude.rkt")
+(define s (new-state+ (goal+-s (fresh (x y) (== x y)))))
+(define g (car (state-g s)))
+(define sp (run-goal g))
+(set! sp (state-patch-vs sp))
+(set! sp (car sp))
+(patch-- (state '() (hash)) sp) ;;=>#f ;;BUG
