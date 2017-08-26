@@ -16,10 +16,9 @@
 #lang racket
 (provide
  (struct-out var)
+ pass-
  pass
- pass+
  pass*
- pass*+
  goalf->dgoalf
  define-relation
  conj+-
@@ -57,19 +56,17 @@
 ;  (state (remove-duplicates (state-g s)) (state-c s)))
 
 #| State → SizedStream State |#
-(define (pass s)
+(define (pass- s)
   (let ([g (state-g s)] [c (state-c s)])
     (if (null? g)
         (sizedstream s)
-        (sizedstream-map clean-state (patch+ (state '() c) (map run-goal g))))))
+        (patch+ (state '() c) (map run-goal g)))))
+(define (pass s)
+  (sizedstream-map clean-state (pass- s)))
 (define (pass* s)
   (if (null? (state-g s))
       (sizedstream s)
       (sizedstream-bind (pass s) pass*)))
-
-#| SizedStream State → SizedStream State |#
-(define (pass+ ss) (sizedstream-bind ss pass))
-(define (pass*+ ss) (sizedstream-bind ss pass*))
 
 #| U Constraint Goal → SizedStream (Hash ID ConstraintsV) |#
 (define (run- g)
