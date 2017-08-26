@@ -26,4 +26,4 @@
 #| Nat |#
 (define var-count 0)
 #| → Var |#
-(define (new-var) (set! var-count (+ 1 var-count)) var-count)
+(define (new-var) (set! var-count (+ 1 var-count)) (var var-count))
