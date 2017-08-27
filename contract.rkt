@@ -17,4 +17,4 @@
 (provide maybe)
 
 #| Contract → Contract |#
-(define ((maybe c) x) (or/c false/c c))
+(define (maybe c) (or/c false/c c))
