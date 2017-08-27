@@ -7,5 +7,6 @@
 (require "state.rkt")
 (require "stream.rkt")
 (require "zk.rkt")
+(require "types.rkt")
 (require "prelude/unify.rkt")
 (require "prelude/prelude.rkt")
