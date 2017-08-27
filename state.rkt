@@ -39,8 +39,8 @@
 (require "id.rkt")
 (require "contract.rkt")
 
-(define-syntax-rule (let-loop countinue x ixs onnull body [v vv] ...)
-  (let loop ([xs isx] [v vv] ...)
+(define-syntax-rule (let-loop countinue x ixs ([v vv] ...) onnull body)
+  (let loop ([xs ixs] [v vv] ...)
     (if (null? xs)
       onnull
       (let ([x (car xs)] [countinue (λ (v ...) (loop (cdr xs) v ...))])
@@ -77,19 +77,12 @@
 #| [Constraint] → State → Maybe (State × [Var]) |#
 (define/contract (s+c cs s)
   (-> (listof constraint?) state? (maybe (cons/c state? (listof var?))))
-  (call/cc
-   (λ (return)
-     (let ([s s] [vs '()])
-       (for ([c cs])
-         (let* ([t (constraint-type c)]
-                [constraints (get-constraints- t)]
-                [nsv ((constraints-add constraints) (constraint-v c) s)])
-           (if nsv
-               (let ([ns (car nsv)] [nvs (cdr nsv)])
-                 (set! s ns)
-                 (set! vs (append nvs vs)))
-               (return #f))))
-       (return (cons s vs))))))
+  (let-loop loop c cs ([s s] [vs '()])
+            (cons s vs)
+            (let* ([t (constraint-type c)]
+                   [constraints (get-constraints- t)]
+                   [nsv ((constraints-add constraints) (constraint-v c) s)])
+              (and nsv (loop (car nsv) (append vs (cdr nsv)))))))
 
 #| [Constraint] → State → Maybe State |#
 (define/contract (s+c+ cs s)
