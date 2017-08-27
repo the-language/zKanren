@@ -136,7 +136,7 @@
 #| State → Constraints → ConstraintsV → State |#
 (define/contract (set-constraintsv s cs v)
   (-> state? constraints? constraintsv/c state?)
-  (hash-set (state-c s) (constraints-id cs) v))
+  (state (hash-set (state-c s) (constraints-id cs) v) (state-g s)))
 
 #| Goal ... → State |#
 (define (new-state . gs) (state gs (hash)))
