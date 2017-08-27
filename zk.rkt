@@ -20,6 +20,7 @@
  pass
  pass*
  goalf->dgoalf
+ ->d-goal+
  define-relation
  conj+-
  conj+
@@ -75,11 +76,17 @@
 #| Goal+ → SizedStream (Hash ID ConstraintsV) |#
 (define (run-+ g) (run- (goal+-s g)))
 
-#| (... → Goal) → (... → DGoal) |#
-(define ((goalf->dgoalf f) . args) (new-dgoal (new-id) args (run-goal (apply f args))))
+#| ID → (... → Goal) → (... → DGoal) |#
+(define ((goalf->dgoalf id f) . args) (new-dgoal id args (run-goal (apply f args))))
+
+#| ID → ID → (... → Goal+) → (... → Goal+) |#
+(define ((->d-goal+ ids idu f) . args)
+  (let ([g+ (apply f args)])
+    (goal+ (new-dgoal ids args (run-goal (goal+-s g+))) (new-dgoal idu args (run-goal (goal+-u g+))))))
 
 (define-syntax-rule (define-relation (name args ...) body)
-  (define name (goalf->dgoalf (λ (args ...) body))))
+  (let ([ids (new-id)] [idu (new-id)])
+    (define name (->d-goal+ ids idu (λ (args ...) body)))))
 
 #| [U Constraint Goal] → Goal |#
 (define (conj+- gs)
