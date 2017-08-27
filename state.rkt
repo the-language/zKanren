@@ -36,6 +36,8 @@
 (require "constraint.rkt")
 (require "stream.rkt")
 (require "hash.rkt")
+(require "id.rkt")
+(require "contract.rkt")
 
 #| [Goal] → Hash ID ConstraintsV → State |#
 (struct state (g c))
@@ -62,7 +64,8 @@
     (s+c+ cs (state (append gs (state-g s)) (state-c s)))))
 
 #| [Constraint] → State → Maybe (State × [Var]) |#
-(define (s+c cs s)
+(define/contract (s+c cs s)
+  (-> (listof constraint?) state? (maybe (cons/c state? (listof var?))))
   (call/cc
    (λ (return)
      (let ([s s] [vs '()])
@@ -78,14 +81,16 @@
        (return (cons s vs))))))
 
 #| [Constraint] → State → Maybe State |#
-(define (s+c+ cs s)
+(define/contract (s+c+ cs s)
+  (-> (listof constraint?) state? (maybe state?))
   (let ([nsv (s+c cs s)])
     (and nsv
          (let ([s (car nsv)] [vs (cdr nsv)])
            (and (check-constraints vs s) s)))))
 
 #| [State → Maybe State] |#
-(define cleanc
+(define/contract cleanc
+  (listof (-> state? (maybe state?)))
   (list
    (λ (s)
      (let loop ([b #f] [s s] [fs (hash-map (state-c s)
@@ -97,7 +102,7 @@
 
 (define-syntax-rule (define-state-cleaner state body)
   (define-state-cleaner- (λ (state) body)))
-#| State → Maybe State → () |#
+#| (State → Maybe State) → () |#
 (define (define-state-cleaner- f) (set! cleanc (cons f cleanc)))
 
 #| State → State |#
