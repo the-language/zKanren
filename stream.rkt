@@ -33,7 +33,8 @@
  )
 
 #| Contract → Any → Any |#
-(define (run-contract c x)
+(define/contract (run-contract c x)
+  (-> contract? any/c any/c)
   (if (flat-contract? c)
       ((flat-contract-predicate c) x)
       (c x)))
