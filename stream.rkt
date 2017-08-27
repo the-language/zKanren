@@ -35,7 +35,7 @@
 #| Contract → Any → Any |#
 (define (run-contract c x)
   (if (flat-contract? c)
-      (run-contract (flat-contract-predicate c) x)
+      ((flat-contract-predicate c) x)
       (c x)))
 
 #| Promise+ a = U a (Promise (Promise+ a)) |#
@@ -57,7 +57,7 @@
 (define (sizedstream/c t)
   (promise+/c
    (λ (x)
-     (or (null? x) ((run-contract (cons/c t (sizedstream/c t))) x)))))
+     (or (null? x) (run-contract (cons/c t (sizedstream/c t)) x)))))
 #| Contract |#
 (define sizedstream? (sizedstream/c any/c))
 
