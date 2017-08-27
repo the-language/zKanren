@@ -31,9 +31,16 @@
  sizedstream?
  )
 
+#| Contract → Any → Any |#
+(define (run-contract c x)
+  (if (flat-contract? c)
+      (run-contract (flat-contract-predicate c) x)
+      (c x)))
+
 #| Promise+ a = U a (Promise (Promise+ a)) |#
 #| Contract → Contract |#
-(define (promise+/c t) (or/c t (promise/c (promise+/c t))))
+(define ((promise+/c t) x)
+  (or (run-contract t x) (run-contract (promise/c (promise+/c t)) x)))
 
 #| U (Promise a) a → Promise a |#
 (define-syntax-rule (pack x) (delay (force x)))
@@ -46,7 +53,10 @@
 
 #| SizedStream a = Promise+ (U () (a × SizedStream a))|#
 #| Contract → Contract |#
-(define (sizedstream/c t) (promise+/c (or/c null? (cons/c t (sizedstream/c t)))))
+(define (sizedstream/c t)
+  (promise+/c
+   (λ (x)
+     (or (null? x) ((run-contract (cons/c t (sizedstream/c t))) x)))))
 #| Contract |#
 (define sizedstream? (sizedstream/c any/c))
 
