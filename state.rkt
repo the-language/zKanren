@@ -39,6 +39,13 @@
 (require "id.rkt")
 (require "contract.rkt")
 
+(define-syntax-rule (let-loop countinue x ixs onnull body [v vv] ...)
+  (let loop ([xs isx] [v vv] ...)
+    (if (null? xs)
+      onnull
+      (let ([x (car xs)] [countinue (λ (v ...) (loop (cdr xs) v ...))])
+        body))))
+
 #| [Goal] → Hash ID ConstraintsV → State |#
 (struct state (g c))
 
@@ -49,17 +56,21 @@
 (struct state-patch (vs))
 
 #| State → StatePatch → Stream State |#
-(define (patch s p) (patch- s (state-patch-vs p)))
+(define/contract (patch s p)
+  (-> state? state-patch? (sizedstream/c state?))
+  (patch- s (state-patch-vs p)))
 
 #| State → [StatePatch1] → SizedStream State |#
-(define (patch- s ps)
+(define/contract (patch- s ps)
+  (-> state? (listof state-patch1?) (sizedstream/c state?))
   (cond
     [(null? ps) '()]
     [(patch-- s (car ps)) => (λ (ns) (sizedstream-cons ns (pack (patch- s (cdr ps)))))]
     [else (pack (patch- s (cdr ps)))]))
 
 #| State → StatePatch1 → Maybe State |#
-(define (patch-- s p)
+(define/contract (patch-- s p)
+  (-> state? state-patch1? (maybe state?))
   (let ([gs (state-patch1-gs p)] [cs (state-patch1-cs p)])
     (s+c+ cs (state (append gs (state-g s)) (state-c s)))))
 
@@ -122,7 +133,8 @@
       (sizedstream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
 
 #| [Var] → State → Bool |#
-(define (check-constraints vs s)
+(define/contract (check-constraints vs s)
+  (-> (listof var) state? boolean?)
   (hash-andmap
    (λ (id cs) ((constraints-check (get-constraints- id)) vs s))
    (state-c s)))

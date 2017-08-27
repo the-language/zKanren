@@ -1,5 +1,6 @@
 #lang racket
 (require "constraint.rkt")
+(require "contract.rkt")
 (require "goal.rkt")
 (require "hash.rkt")
 (require "id.rkt")
