@@ -29,6 +29,7 @@
  promise+/c
  sizedstream/c
  sizedstream?
+ run-contract
  )
 
 #| Contract → Any → Any |#

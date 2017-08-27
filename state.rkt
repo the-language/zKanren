@@ -38,6 +38,7 @@
 (require "hash.rkt")
 (require "id.rkt")
 (require "contract.rkt")
+(require "types.rkt")
 
 (define-syntax-rule (let-loop countinue x ixs ([v vv] ...) onnull body)
   (let loop ([xs ixs] [v vv] ...)
@@ -45,9 +46,6 @@
       onnull
       (let ([x (car xs)] [countinue (λ (v ...) (loop (cdr xs) v ...))])
         body))))
-
-#| [Goal] → Hash ID ConstraintsV → State |#
-(struct state (g c))
 
 #| [Goal] → [Constraint] → StatePatch1 |#
 (struct state-patch1 (gs cs))
@@ -136,7 +134,9 @@
 (define (get-constraintsv s cs) (hash-ref (state-c s) (constraints-id cs) (constraints-empty cs)))
 
 #| State → Constraints → ConstraintsV → State |#
-(define (set-constraintsv s cs v) (hash-set (state-c s) (constraints-id cs) v))
+(define/contract (set-constraintsv s cs v)
+  (-> state? constraints? constraintsv/c state?)
+  (hash-set (state-c s) (constraints-id cs) v))
 
 #| Goal ... → State |#
 (define (new-state . gs) (state gs (hash)))
