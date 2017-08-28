@@ -53,8 +53,8 @@
 (define-constraints ==c
   (hash)
   (λ (cv s)
-    (let ([x (car cv)] [y (cdr cv)])
-      (let* ([csv (get-constraintsv s ==c)] [nc (unify csv x y)])
+    (let ([x (car cv)] [y (cdr cv)] [csv (get-constraintsv s ==c)])
+      (let ([nc (unify csv x y)])
         (and nc (let loop ([csv csv] [nc nc] [vs '()])
                   (if (null? nc)
                       (cons (set-constraintsv s ==c csv) vs)
@@ -63,4 +63,45 @@
                           (loop (hash-set csv v x) (cdr nc) (cons v vs))))))))))
   (λ (vs s) #t)
   (λ (s) #f)
-  (λ (s) (cons '== (get-constraintsv s ==c))))
+  (λ (s) (cons '== (hash->list (get-constraintsv s ==c)))))
+
+#| ConstraintsV → Any → Any → Maybe [Var × Any] |#
+(define (ununify cv x y)
+  (let ([us (unify cv x y)])
+    (cond
+      [(not us) '()]
+      [(null? us) #f]
+      [else us])))
+
+(require racket/set)
+#| ConstraintsVUn = [Set (Var × Any)] |#
+
+#| Set (Var × Any) → ConstraintsVUn → ConstraintsVUn |#
+(define (add=/= c cs)
+  (let ([cs (filter-not (λ (c2) (subset? c c2)) cs)])
+    (if (ormap (λ (c2) (subset? c2 c)) cs)
+        cs
+        (cons c cs))))
+
+#| Var → ConstraintsV → ConstraintsVUn → Bool |#
+(define (check=/=1 v csv csvu)
+  (error))
+
+(define-constraints =/=c
+  '()
+  (λ (cv s)
+    (let ([x (car cv)] [y (cdr cv)] [csv (get-constraintsv s ==c)] [csvu (get-constraintsv s =/=c)])
+      (let ([nc (ununify csv x y)])
+        (and nc (cons (set-constraintsv s =/=c (add=/= (list->set nc) csvu)) (map car nc))))))
+  (λ (vs s)
+    (let ([csv (get-constraintsv s ==c)] [csvu (get-constraintsv s =/=c)])
+      (andmap (λ (v) (check=/=1 csv csvu)) vs)))
+  (λ (s)
+    (let ([csvu (get-constraintsv s =/=c)])
+      (let loop ([xs csvu] [ncsvu csvu])
+        (if (null? xs)
+            (if (< (length ncsvu) (length csvu))
+                (set-constraintsv s =/=c ncsvu)
+                #f)
+            (loop (cdr xs) (add=/= (car xs) ncsvu))))))
+  (λ (s) (cons '=/= (get-constraintsv s =/=c))))
