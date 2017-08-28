@@ -40,9 +40,14 @@
       [(pair? x) (and (pair? y) (let ([xs (unify cv (car x) (car y))] [ys (unify cv (cdr x) (cdr y))])
                                   (and xs ys (append xs ys))))]
       [(vector? x) (and (vector? y) (unify cv (vector->list x) (vector->list y)))]
-      [(struct? x) (and (struct? y) (unify cv (struct->list x) (struct->list y)))]
+      [(struct? x) (and (struct? y) (struct-type-eq? x y) (unify cv (struct->list x) (struct->list y)))]
       [(hash? x) (and (hash? y) (unify cv (hash->list x) (hash->list y)))]
       [else #f])))
+
+#| Struct → Struct → Bool |#
+(define (struct-type-eq? x y)
+  (let-values ([(tx _x) (struct-info x)] [(ty _y) (struct-info y)])
+    (equal? tx ty)))
 
 #| Any → Any → Constraint |#
 (define (==- x y) (new-constraint ==c (cons x y)))
