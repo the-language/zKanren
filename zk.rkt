@@ -74,7 +74,9 @@
   (sizedstream-map state-c (pass* (new-state+ g))))
 
 #| Goal+ → SizedStream (Hash ID ConstraintsV) |#
-(define (run-+ g) (run- (goal+-s g)))
+(define/contract (run-+ g)
+  (-> goal+? (sizedstream/c hash?))
+  (run- (goal+-s g)))
 
 #| ID → (... → Goal) → (... → DGoal) |#
 (define ((goalf->dgoalf id f) . args) (new-dgoal id args (run-goal (apply f args))))

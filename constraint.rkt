@@ -22,17 +22,17 @@
  define-constraints-
  define-constraints
  get-constraints-
- constraintv/c
- constraintsv/c
+ constraintv?
+ constraintsv?
  )
 (require "id.rkt")
 (require "types.rkt")
 (require "contract.rkt")
 
 #| ConstraintV = Any |#
-(define constraintv/c any/c)
+(define constraintv? any/c)
 #| ConstraintsV = Any |#
-(define constraintsv/c any/c)
+(define constraintsv? any/c)
 
 #| ID →
 ConstraintsV →
@@ -50,8 +50,8 @@ Constraints |#
 (State → Symbol × [Any]) →
 Constraints |#
 (define/contract (new-constraints empty add check clean show)
-  (-> constraintsv/c
-      (-> constraintsv/c state? (maybe (cons/c state? (listof var?))))
+  (-> constraintsv?
+      (-> constraintsv? state? (maybe (cons/c state? (listof var?))))
       (-> (listof var?) state? boolean?)
       (-> state? (maybe state?))
       (-> state? (cons/c symbol? list?))

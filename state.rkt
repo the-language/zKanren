@@ -108,7 +108,8 @@
 (define (define-state-cleaner- f) (set! cleanc (cons f cleanc)))
 
 #| State → State |#
-(define (clean-state s)
+(define/contract (clean-state s)
+  (-> state? state?)
   (let loop ([cs cleanc] [s s])
     (if (null? cs)
         s
@@ -118,7 +119,8 @@
               (loop (cdr cleanc) s))))))
 
 #| State → [StatePatch] → SizedStream State |#
-(define (patch+ s p)
+(define/contract (patch+ s p)
+  (-> state? (listof state-patch?) (sizedstream/c state?))
   (if (null? p)
       (sizedstream s)
       (sizedstream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
@@ -131,11 +133,13 @@
    (state-c s)))
 
 #| State → Constraints → ConstraintsV |#
-(define (get-constraintsv s cs) (hash-ref (state-c s) (constraints-id cs) (constraints-empty cs)))
+(define/contract (get-constraintsv s cs)
+  (-> state? constraints? constraintsv?)
+  (hash-ref (state-c s) (constraints-id cs) (constraints-empty cs)))
 
 #| State → Constraints → ConstraintsV → State |#
 (define/contract (set-constraintsv s cs v)
-  (-> state? constraints? constraintsv/c state?)
+  (-> state? constraints? constraintsv? state?)
   (state (state-g s) (hash-set (state-c s) (constraints-id cs) v)))
 
 #| Goal ... → State |#
