@@ -48,7 +48,7 @@
 #| SizedStream a = Promise+ (U () (a × SizedStream a))|#
 #| Contract → Contract |#
 (define (sizedstream/c t) (or/c null? (cons/c t any/c) promise?))
-;(define (sizedstream/c t) (or/c null? (cons/c t (sizedstream/c t)) (promise/c (sizedstream/c t)))
+;(define (sizedstream/c t) (or/c null? (cons/c t (sizedstream/c t)) (promise/c (sizedstream/c t))))
 #| Contract |#
 (define sizedstream? (sizedstream/c any/c))
 
