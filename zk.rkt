@@ -47,12 +47,14 @@
  (struct-out goal+)
  noto
  let-loop
+ struct
  )
 (require "constraint.rkt")
 (require "state.rkt")
 (require "stream.rkt")
 (require "goal.rkt")
 (require "id.rkt")
+(require "struct.rkt")
 
 ;(define-state-cleaner s
 ;  (state (remove-duplicates (state-g s)) (state-c s)))
