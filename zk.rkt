@@ -85,7 +85,13 @@
 #| ID → ID → (... → Goal+) → (... → Goal+) |#
 (define ((->d-goal+ ids idu f) . args)
   (let ([g+ (apply f args)])
-    (goal+ (new-dgoal ids args (run-goal (goal+-s g+))) (new-dgoal idu args (run-goal (goal+-u g+))))))
+    (let ([s (goal+-s g+)] [u (goal+-u g+)])
+      (goal+ (if (constraint? s)
+                 s
+                 (new-dgoal ids args (run-goal s)))
+             (if (constraint? u)
+                 u
+                 (new-dgoal idu args (run-goal u)))))))
 
 (define-syntax-rule (define-relation (name args ...) body)
   (let ([ids (new-id)] [idu (new-id)])
