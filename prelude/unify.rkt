@@ -88,9 +88,12 @@
         cs
         (cons c cs))))
 
-#| Var → ConstraintsV → ConstraintsVUn → Bool |#
-(define (check=/=1 v csv csvu)
-  (error))
+(struct %nothing ())
+(define nothing (%nothing))
+
+#| Var → a → ConstraintsVUn → Bool |#
+(define (check=/=1- v csv csvu)
+  (let 
 
 (define-constraints =/=c
   '()
