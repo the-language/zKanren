@@ -37,7 +37,7 @@
 #| ID →
 ConstraintsV →
 (ConstraintV → State → Maybe (State × [Var])) →
-([Var] → State → Bool) →
+([Var] → State → U Bool State) →
 (State → Maybe State) →
 (State → Symbol × [Any]) →
 Constraints |#
@@ -45,14 +45,14 @@ Constraints |#
 
 #| ConstraintsV →
 (ConstraintV → State → Maybe (State × [Var])) →
-([Var] → State → Bool) →
+([Var] → State → U Bool State) →
 (State → Maybe State) →
 (State → Symbol × [Any]) →
 Constraints |#
 (define/contract (new-constraints empty add check clean show)
   (-> constraintsv?
       (-> constraintsv? state? (maybe (cons/c state? (listof var?))))
-      (-> (listof var?) state? boolean?)
+      (-> (listof var?) state? (or/c state? boolean?))
       (-> state? (maybe state?))
       (-> state? (cons/c symbol? list?))
       constraints?)

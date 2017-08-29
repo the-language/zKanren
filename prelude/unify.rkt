@@ -91,9 +91,27 @@
 (struct %nothing ())
 (define nothing (%nothing))
 
-#| Var → a → ConstraintsVUn → Bool |#
-(define (check=/=1- v csv csvu)
-  (let 
+#| Var → ConstraintsV → ConstraintsVUn → U Bool ConstraintsVUn |#
+(define (check=/=1 v csv csvu)
+  (let ([x (hash-ref csv v nothing)])
+    (or (%nothing? x) (check== v x csv csvu))))
+
+#| (a → Bool) → Set a → Set a |#
+(define (set-filter f s)
+  (list->set (filter f (set->list s))))
+
+#| Var → Any → ConstraintsV → ConstraintsVUn → Maybe ConstraintsVUn |#
+(define (check== v x csv csvu)
+  (let-loop loop s csvu [(ncsvu '())]
+            ncsvu
+            (let ([ns (set-filter (λ (y)
+                                    (let ([v2 (car y)] [z (cdr y)])
+                                      (if (equal? v v2)
+                                          (not (null? (unify csv x z)))
+                                          #t))) s)])
+              (if (set-empty? ns)
+                  #f
+                  (loop (cons ns ncsvu))))))
 
 (define-constraints =/=c
   '()
@@ -103,7 +121,12 @@
         (and nc (cons (set-constraintsv s =/=c (add=/= (list->set nc) csvu)) (map car nc))))))
   (λ (vs s)
     (let ([csv (get-constraintsv s ==c)] [csvu (get-constraintsv s =/=c)])
-      (andmap (λ (v) (check=/=1 csv csvu)) vs)))
+      (let-loop v vs ([b #t] [ncsvu csvu])
+                (or b ncsvu)
+                (let ([nncsvu (check=/=1 v csv csvu)])
+                  (and nncsvu (if (pair? nncsvu)
+                                  (loop #f nncsvu)
+                                  (loop b ncsvu)))))))
   (λ (s)
     (let ([csvu (get-constraintsv s =/=c)])
       (let loop ([xs csvu] [ncsvu csvu])
