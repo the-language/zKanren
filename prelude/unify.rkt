@@ -18,6 +18,7 @@
  ==c
  =/=c
  ==
+ =/=
  )
 (require "../zk.rkt")
 (require racket/struct)
@@ -55,7 +56,8 @@
 (define (=/=- x y) (new-constraint =/=c (cons x y)))
 
 #| Any → Any → Goal+ |#
-(define (== x y) (goal+ (==- x y) (=/=- x y)));;u:BUG
+(define (== x y) (goal+ (==- x y) (=/=- x y)))
+(define (=/= x y) (goal+ (=/=- x y) (==- x y)))
 
 (define-constraints ==c
   (hash)
