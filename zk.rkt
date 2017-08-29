@@ -46,7 +46,6 @@
  run-+
  (struct-out goal+)
  noto
- let-loop
  struct
  )
 (require "constraint.rkt")

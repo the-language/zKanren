@@ -32,7 +32,6 @@
  new-state+
  s+c
  s+c+
- let-loop
  )
 (require "constraint.rkt")
 (require "stream.rkt")

@@ -21,6 +21,7 @@
  =/=
  )
 (require "../zk.rkt")
+(require "../let-loop.rkt")
 (require racket/struct)
 
 #| ConstraintsV = Hash Var Any |#
@@ -125,7 +126,7 @@
         (and nc (cons (set-constraintsv s =/=c (add=/= (list->set nc) csvu)) (map car nc))))))
   (λ (vs s)
     (let ([csv (get-constraintsv s ==c)] [csvu (get-constraintsv s =/=c)])
-      (let-loop v vs ([b #t] [ncsvu csvu])
+      (let-loop loop v vs ([b #t] [ncsvu csvu])
                 (or b (state (set-constraintsv s =/=c ncsvu)))
                 (let ([nncsvu (check=/=1 v csv csvu)])
                   (and nncsvu (if (pair? nncsvu)
