@@ -40,13 +40,7 @@
 (require "id.rkt")
 (require "contract.rkt")
 (require "types.rkt")
-
-(define-syntax-rule (let-loop countinue x ixs ([v vv] ...) onnull body)
-  (let loop ([xs ixs] [v vv] ...)
-    (if (null? xs)
-      onnull
-      (let ([x (car xs)] [countinue (λ (v ...) (loop (cdr xs) v ...))])
-        body))))
+(require "let-loop.rkt")
 
 #| [Goal] → [Constraint] → StatePatch1 |#
 (struct state-patch1 (gs cs))
@@ -83,17 +77,15 @@
                    [nsv ((constraints-add constraints) (constraint-v c) s)])
               (and nsv (loop (car nsv) (append vs (cdr nsv)))))))
 
-#| [Constraint] → State → Maybe State |#
 (define/contract (s+c+ cs s)
-  (-> (listof constraint?) state? (maybe state?))
+  ((listof constraint?) state? . -> . (maybe state?))
   (let ([nsv (s+c cs s)])
     (and nsv
          (let ([s (car nsv)] [vs (cdr nsv)])
            (and (check-constraints vs s) s)))))
 
-#| [State → Maybe State] |#
 (define/contract cleanc
-  (listof (-> state? (maybe state?)))
+  (listof (state? . -> . (maybe state?)))
   (list
    (λ (s)
      (let loop ([b #f] [s s] [fs (hash-map (state-c s)
@@ -105,12 +97,12 @@
 
 (define-syntax-rule (define-state-cleaner state body)
   (define-state-cleaner- (λ (state) body)))
-#| (State → Maybe State) → () |#
-(define (define-state-cleaner- f) (set! cleanc (cons f cleanc)))
+(define/contract (define-state-cleaner- f)
+  (state? (maybe state?) . -> . void?)
+  (set! cleanc (cons f cleanc)))
 
-#| State → State |#
 (define/contract (clean-state s)
-  (-> state? state?)
+  (state? . -> . state?)
   (let loop ([cs cleanc] [s s])
     (if (null? cs)
         s
@@ -119,28 +111,27 @@
               (loop cleanc ns)
               (loop (cdr cleanc) s))))))
 
-#| State → [StatePatch] → SizedStream State |#
 (define/contract (patch+ s p)
-  (-> state? (listof state-patch?) (sizedstream/c state?))
+  (state? (listof state-patch?) . -> . (sizedstream/c state?))
   (if (null? p)
       (sizedstream s)
       (sizedstream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
 
-#| [Var] → State → Bool |#
 (define/contract (check-constraints vs s)
-  (-> (listof var) state? boolean?)
-  (hash-andmap
-   (λ (id cs) ((constraints-check (get-constraints- id)) vs s))
-   (state-c s)))
+  ((listof var) state? . -> . (or/c state? boolean?))
+  (let-loop-hash loop id cs (state-c s) ([nm #t] [s s])
+                 (or nm s)
+                 (let ([ns ((constraints-checkm (get-constraints- id)) vs s)])
+                   (and ns (if (boolean? ns)
+                               (loop nm s)
+                               (loop #f ns))))))
 
-#| State → Constraints → ConstraintsV |#
 (define/contract (get-constraintsv s cs)
-  (-> state? constraints? constraintsv?)
+  (state? constraints? . -> . constraintsv?)
   (hash-ref (state-c s) (constraints-id cs) (constraints-empty cs)))
 
-#| State → Constraints → ConstraintsV → State |#
 (define/contract (set-constraintsv s cs v)
-  (-> state? constraints? constraintsv? state?)
+  (state? constraints? constraintsv? . -> . state?)
   (state (state-g s) (hash-set (state-c s) (constraints-id cs) v)))
 
 #| Goal ... → State |#

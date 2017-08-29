@@ -41,7 +41,7 @@ ConstraintsV →
 (State → Maybe State) →
 (State → Symbol × [Any]) →
 Constraints |#
-(struct constraints (id empty add check clean show))
+(struct constraints (id empty add checkm clean show))
 
 #| ConstraintsV →
 (ConstraintV → State → Maybe (State × [Var])) →
@@ -62,13 +62,16 @@ Constraints |#
 (struct constraint (type v))
 
 #| Constraints → ConstraintV → Constraint |#
-(define (new-constraint cs v) (constraint (constraints-id cs) v))
+(define/contract (new-constraint cs v)
+  (-> constraints? constraintv? constraint?)
+  (constraint (constraints-id cs) v))
 
 #| Hash ID Constraints |#
 (define constraintss (make-hash))
 
-#| Constraints → () |#
-(define (define-constraints- x)
+#| Constraints → Void |#
+(define/contract (define-constraints- x)
+  (-> constraints? void?)
   (let ([id (constraints-id x)])
     (if (hash-has-key? constraintss id)
         (error 'define-constraints-)

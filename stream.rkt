@@ -42,7 +42,9 @@
 (define-syntax-rule (pack x) (delay (force x)))
 
 #| Promise+ a → (a → b) → Promise+ b |#
-(define (promise+-fmap-flip x f)
+(define/contract (promise+-fmap-flip x f)
+  (let ([a (new-∀/c 'a)] [b (new-∀/c 'b)])
+    (-> (promise+/c a) (-> a b) (promise+/c b)))
   (if (promise? x)
       (delay (promise+-fmap-flip (force x) f))
       (f x)))
@@ -73,20 +75,30 @@
 (define (sizedstream-empty? x) (null? (pull x)))
 
 #| SizedStream a → a |#
-(define (sizedstream-car x) (car (pull x)))
+(define/contract (sizedstream-car x)
+  (let ([a (new-∀/c 'a)])
+    ((sizedstream/c a) . -> . a))
+  (car (pull x)))
 
 #| SizedStream a → SizedStream a |#
-(define (sizedstream-cdr x) (cdr (pull x)))
+(define/contract (sizedstream-cdr x)
+  (let ([a (new-∀/c 'a)])
+    ((sizedstream/c a) . -> . (sizedstream/c a)))
+  (cdr (pull x)))
 
 #| SizedStream a → SizedStream a → SizedStream a |#
-(define (sizedstream-mplus xs ys)
+(define/contract (sizedstream-mplus xs ys)
+  (let ([a (new-∀/c 'a)])
+    ((sizedstream/c a) (sizedstream/c a) . -> . (sizedstream/c a)))
   (cond
     ((null? xs) ys)
     ((promise? xs) (delay (sizedstream-mplus ys (force xs))))
     (else (cons (car xs) (sizedstream-mplus ys (cdr xs))))))
 
 #| SizedStream (SizedStream a) → SizedStream a |#
-(define (sizedstream-join xss)
+(define/contract (sizedstream-join xss)
+  (let ([a (new-∀/c 'a)])
+    ((sizedstream/c (sizedstream/c a)) . -> . (sizedstream/c a)))
   (promise+-fmap-flip xss
                       (λ (xss)
                         (if (null? xss)
@@ -94,10 +106,15 @@
                             (sizedstream-mplus (car xss) (pack (sizedstream-join (cdr xss))))))))
 
 #| SizedStream a → (a → SizedStream b) → SizedStream b |#
-(define (sizedstream-bind xs f) (sizedstream-join (sizedstream-map f xs)))
+(define/contract (sizedstream-bind xs f)
+  (let ([a (new-∀/c 'a)] [b (new-∀/c 'b)])
+    ((sizedstream/c a) (a . -> . (sizedstream/c b)) . -> . (sizedstream/c b)))
+  (sizedstream-join (sizedstream-map f xs)))
 
 #| (a → b) → SizedStream a → SizedStream b |#
-(define (sizedstream-map f xs)
+(define/contract (sizedstream-map f xs)
+  (let ([a (new-∀/c 'a)] [b (new-∀/c 'b)])
+    ((a . -> . b) (sizedstream/c a) . -> . (sizedstream/c b)))
   (promise+-fmap-flip xs
                       (λ (xs)
                         (if (null? xs)
@@ -105,7 +122,9 @@
                             (cons (f (car xs)) (pack (sizedstream-map f (cdr xs))))))))
 
 #| (a → Bool) → SizedStream a → SizedStream a |#
-(define (sizedstream-filter f xs)
+(define/contract (sizedstream-filter f xs)
+  (let ([a (new-∀/c 'a)])
+    ((a . -> . boolean?) (sizedstream/c a) . -> . (sizedstream/c a)))
   (promise+-fmap-flip
    xs
    (λ (xs)
@@ -115,14 +134,18 @@
        [else (pack (sizedstream-filter f (cdr xs)))]))))
 
 #| SizedStream a → [a] |#
-(define (sizedstream->list xs)
+(define/contract (sizedstream->list xs)
+  (let ([a (new-∀/c 'a)])
+    ((sizedstream/c a) . -> . (listof a)))
   (let ([xs (pull xs)])
     (if (null? xs)
         '()
         (cons (car xs) (sizedstream->list (cdr xs))))))
 
 #| Pos → SizedStream a → [a] |#
-(define (sizedstream-take n xs)
+(define/contract (sizedstream-take n xs)
+  (let ([a (new-∀/c 'a)])
+    (exact-nonnegative-integer? (sizedstream/c a) . -> . (listof a)))
   (if (zero? n)
       '()
       (let ([xs (pull xs)])
