@@ -97,7 +97,7 @@
 (define-syntax-rule (define-state-cleaner state body)
   (define-state-cleaner- (λ (state) body)))
 (define/contract (define-state-cleaner- f)
-  (state? (maybe state?) . -> . void?)
+  ((state? . -> . (maybe state?)) . -> . void?)
   (set! cleanc (cons f cleanc)))
 
 (define/contract (clean-state s)
