@@ -16,6 +16,7 @@
 #lang racket
 (provide
  ==c
+ =/=c
  ==
  )
 (require "../zk.rkt")
@@ -51,9 +52,10 @@
 
 #| Any → Any → Constraint |#
 (define (==- x y) (new-constraint ==c (cons x y)))
+(define (=/=- x y) (new-constraint =/=c (cons x y)))
 
 #| Any → Any → Goal+ |#
-(define (== x y) (goal+ (==- x y) (==- x y)));;u:BUG
+(define (== x y) (goal+ (==- x y) (=/=- x y)));;u:BUG
 
 (define-constraints ==c
   (hash)
