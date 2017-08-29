@@ -1,7 +1,7 @@
 #lang racket
 (define-syntax require...
   (syntax-rules ()
-    [(_) void]
+    [(_) (void)]
     [(_ f0 f ...) (begin
                     (require f0)
                     (require... f ...))]))
