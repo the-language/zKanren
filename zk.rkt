@@ -114,7 +114,7 @@
 
 #| ([U Constraint Goal] → Goal) → ([Goal+] → Goal+) |#
 (define/contract ((lift+ f) gs)
-  (((or/c constraint? goal?) . -> . goal?) . -> . ((listof goal+?) . -> . goal+?))
+  (((listof (or/c constraint? goal?)) . -> . goal?) . -> . ((listof goal+?) . -> . goal+?))
   (goal+ (f (map goal+-s gs)) (f (map goal+-u gs))))
 
 #| [Goal+] → Goal+ |#
