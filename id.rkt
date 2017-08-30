@@ -28,7 +28,7 @@
   id-count)
 
 #| Any → Bool |#
-(define (var/c v) (and (var? v) (exact-positive-integer? v)))
+(define (var/c v) (and (var? v) (exact-positive-integer? (var-id v))))
 
 #| Pos → Var |#
 (struct var (id)
