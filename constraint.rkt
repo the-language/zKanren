@@ -24,6 +24,8 @@
  get-constraints-
  constraintv?
  constraintsv?
+ get-constraintsv
+ set-constraintsv
  )
 (require "id.rkt")
 (require "types.rkt")
@@ -84,3 +86,11 @@ Constraints |#
   (begin
     (define name (new-constraints empty add check clean show))
     (define-constraints- name)))
+
+(define/contract (get-constraintsv s cs)
+  (state? constraints? . -> . constraintsv?)
+  (hash-ref (state-c s) (constraints-id cs) (constraints-empty cs)))
+
+(define/contract (set-constraintsv s cs v)
+  (state? constraints? constraintsv? . -> . state?)
+  (state (state-g s) (hash-set (state-c s) (constraints-id cs) v)))

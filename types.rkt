@@ -15,17 +15,18 @@
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
 (provide
- state?
- state-g
- state-c
- state-hg
- (rename-out [mkstate state])
+ (contract-out (struct state
+                 [(g (listof goal?))
+                  (c hash?)
+                  (hg set-weak?)]))
+ append-hg
  )
 (require "goal.rkt")
 
 #| [Goal] → Hash ID ConstraintsV → WeakSet Goal → State |#
 (struct state (g c hg))
 
-(define/contract (mkstate g c hg)
-  ((listof goal?) hash? set-weak? . -> . state?)
-  (state g c hg))
+#| [Goal] → WeakSet Goal → WeakSet Goal |#
+(define/contract (append-hg gs hg)
+  ((listof goal?) set-weak? . -> . set-weak?)
+  (list->weak-set (append gs (set->list hg))))

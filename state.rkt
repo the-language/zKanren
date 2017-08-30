@@ -26,8 +26,6 @@
  clean-state
  patch+
  check-constraints
- get-constraintsv
- set-constraintsv
  new-state
  new-state+
  s+c
@@ -64,7 +62,7 @@
 (define/contract (patch-- s p)
   (-> state? state-patch1? (maybe state?))
   (let ([gs (state-patch1-gs p)] [cs (state-patch1-cs p)])
-    (s+c+ cs (state (append gs (state-g s)) (state-c s)))))
+    (s+c+ cs (state (append gs (state-g s)) (state-c s) (append-hg gs (state-hg s))))))
 
 #| [Constraint] → State → Maybe (State × [Var]) |#
 (define/contract (s+c cs s)
@@ -124,14 +122,6 @@
                    (and ns (if (boolean? ns)
                                (loop nm s)
                                (loop #f ns))))))
-
-(define/contract (get-constraintsv s cs)
-  (state? constraints? . -> . constraintsv?)
-  (hash-ref (state-c s) (constraints-id cs) (constraints-empty cs)))
-
-(define/contract (set-constraintsv s cs v)
-  (state? constraints? constraintsv? . -> . state?)
-  (state (state-g s) (hash-set (state-c s) (constraints-id cs) v)))
 
 #| Goal ... → State |#
 (define (new-state . gs) (state gs (hash)))
