@@ -15,11 +15,11 @@
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
 (provide
+ (struct-out goal)
  new-goal
  run-goal
  (struct-out goal+)
  noto
- goal?
  )
 
 #| Goal = U AGoal DGoal |#

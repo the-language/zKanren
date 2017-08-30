@@ -19,8 +19,6 @@
  pass-
  pass
  pass*
- goalf->dgoalf
- ->d-goal+
  define-relation
  conj+-
  conj+
@@ -86,33 +84,19 @@
   (-> goal+? (sizedstream/c (listof (cons/c symbol? list?))))
   (sizedstream-map (λ (s) (hash-map (state-c s) (λ (id v) ((constraints-show (get-constraints- id)) s)))) (run-+ g)))
 
-#| ID → (... → Goal) → (... → DGoal) |#
-(define ((goalf->dgoalf id f) . args) (new-dgoal id args (run-goal (apply f args))))
-
-#| ID → ID → (... → Goal+) → (... → Goal+) |#
-(define ((->d-goal+ ids idu f) . args)
-  (let ([g+ (apply f args)])
-    (let ([s (goal+-s g+)] [u (goal+-u g+)])
-      (goal+ (if (constraint? s)
-                 s
-                 (new-dgoal ids args (run-goal s)))
-             (if (constraint? u)
-                 u
-                 (new-dgoal idu args (run-goal u)))))))
-
 (define-syntax-rule (define-relation (name . args) body)
   (define name (memorize (λ args body))))
 
 #| [U Constraint Goal] → Goal |#
 (define (conj+- gs)
-  (new-agoal
+  (new-goal
    (let loop ([gs gs] [g '()] [c '()])
      (cond
        [(null? gs) (state-patch (list (state-patch1 g c)))]
        [(constraint? (car gs)) (loop (cdr gs) g (cons (car gs) c))]
        [else (loop (cdr gs) (cons (car gs) g) c)]))))
 (define (disj+- gs)
-  (new-agoal
+  (new-goal
    (let loop ([gs gs] [rs '()])
      (if (null? gs)
          (state-patch rs)
