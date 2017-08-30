@@ -127,7 +127,7 @@
   (λ (vs s)
     (let ([csv (get-constraintsv s ==c)] [csvu (get-constraintsv s =/=c)])
       (let-loop loop v vs ([b #t] [ncsvu csvu])
-                (or b (state (set-constraintsv s =/=c ncsvu)))
+                (or b (set-constraintsv s =/=c ncsvu))
                 (let ([nncsvu (check=/=1 v csv csvu)])
                   (and nncsvu (if (pair? nncsvu)
                                   (loop #f nncsvu)
