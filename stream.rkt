@@ -31,20 +31,25 @@
  sizedstream?
  )
 
+#| Any → Bool |#
+(define (not-promise? x) (not (promise? x)))
+
 #| Promise+ a = U a (Promise (Promise+ a)) |#
 #| Contract → Contract |#
 (define (promise+/c t)
   (or/c
    t
    (promise/c (recursive-contract (promise+/c t)))))
+(define (spromise+/c t)
+  (or/c
+   (and/c not-promise? t)
+   (promise/c (recursive-contract (promise+/c t)))))
 
 #| U (Promise a) a → Promise a |#
 (define-syntax-rule (pack x) (delay (force x)))
 
 #| Promise+ a → (a → b) → Promise+ b |#
-(define/contract (promise+-fmap-flip x f)
-  (let ([a (new-∀/c 'a)] [b (new-∀/c 'b)])
-    (-> (promise+/c a) (-> a b) (promise+/c b)))
+(define (promise+-fmap-flip x f)
   (if (promise? x)
       (delay (promise+-fmap-flip (force x) f))
       (f x)))
