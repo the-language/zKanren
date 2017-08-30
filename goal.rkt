@@ -22,6 +22,7 @@
  run-goal
  (struct-out goal+)
  noto
+ goal?
  )
 
 #| Goal = U AGoal DGoal |#
@@ -47,3 +48,6 @@
 
 #| Goal+ → Goal+ |#
 (define (noto g) (goal+ (goal+-s g) (goal+-u g)))
+
+#| Any → Bool |#
+(define (goal? x) (or (agoal? x) (dgoal? x)))

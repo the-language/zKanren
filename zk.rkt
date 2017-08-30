@@ -44,6 +44,7 @@
  new-state
  run-
  run-+
+ run-++
  (struct-out goal+)
  noto
  struct
@@ -71,14 +72,19 @@
       (sizedstream s)
       (sizedstream-bind (pass s) pass*)))
 
-#| U Constraint Goal → SizedStream (Hash ID ConstraintsV) |#
-(define (run- g)
-  (sizedstream-map state-c (pass* (new-state+ g))))
+#| U Constraint Goal → SizedStream State |#
+(define/contract (run- g)
+  (-> (or/c constraint? goal?) (sizedstream/c state?))
+  (pass* (new-state+ g)))
 
 #| Goal+ → SizedStream (Hash ID ConstraintsV) |#
 (define/contract (run-+ g)
-  (-> goal+? (sizedstream/c hash?))
+  (-> goal+? (sizedstream/c state?))
   (run- (goal+-s g)))
+#| Goal+ → SizedStream [Symbol × [Any]] |#
+(define/contract (run-++ g)
+  (-> goal+? (sizedstream/c (listof (cons/c symbol? list?))))
+  (sizedstream-map (λ (s) (hash-map (state-c s) (λ (id v) ((constraints-show (get-constraints- id)) s)))) (run-+ g)))
 
 #| ID → (... → Goal) → (... → DGoal) |#
 (define ((goalf->dgoalf id f) . args) (new-dgoal id args (run-goal (apply f args))))
