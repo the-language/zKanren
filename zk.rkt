@@ -62,7 +62,7 @@
   (let ([g (state-g s)] [c (state-c s)])
     (if (null? g)
         (sizedstream s)
-        (patch+ (state '() c) (map run-goal g)))))
+        (patch+ (state '() c (state-hg s)) (map run-goal g)))))
 (define (pass s)
   (sizedstream-map clean-state (pass- s)))
 (define (pass* s)
