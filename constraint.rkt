@@ -16,7 +16,9 @@
 #lang racket
 (provide
  (struct-out constraints)
- (struct-out constraint)
+ (contract-out (struct constraint
+                 [(type id?)
+                  (v constraintv?)]))
  new-constraints
  new-constraint
  define-constraints-
@@ -71,7 +73,6 @@ Constraints |#
 #| Hash ID Constraints |#
 (define constraintss (make-hash))
 
-#| Constraints → Void |#
 (define/contract (define-constraints- x)
   (-> constraints? void?)
   (let ([id (constraints-id x)])
@@ -93,4 +94,4 @@ Constraints |#
 
 (define/contract (set-constraintsv s cs v)
   (state? constraints? constraintsv? . -> . state?)
-  (state (state-g s) (hash-set (state-c s) (constraints-id cs) v)))
+  (state (state-g s) (hash-set (state-c s) (constraints-id cs) v) (state-hg s)))

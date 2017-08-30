@@ -14,12 +14,18 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide new-id (struct-out var) new-var)
+(provide id? new-id (rename-out [var/c var?]) new-var)
+
+#| Any → Bool |#
+(define id? exact-positive-integer?)
 
 #| Nat |#
 (define id-count 0)
 #| → Pos |#
-(define (new-id) (set! id-count (+ 1 id-count)) id-count)
+(define/contract (new-id)
+  (-> id?)
+  (set! id-count (+ 1 id-count))
+  id-count)
 
 #| Pos → Var |#
 (struct var (id)
@@ -32,4 +38,10 @@
 #| Nat |#
 (define var-count 0)
 #| → Var |#
-(define (new-var) (set! var-count (+ 1 var-count)) (var var-count))
+(define/contract (new-var)
+  (-> var/c)
+  (set! var-count (+ 1 var-count))
+  (var var-count))
+
+#| Any → Bool |#
+(define (var/c v) (and (var? v) (exact-positive-integer? v)))
