@@ -124,7 +124,9 @@
                          rs))))))
 
 #| ([U Constraint Goal] → Goal) → ([Goal+] → Goal+) |#
-(define ((lift+ f) gs) (goal+ (f (map goal+-s gs)) (f (map goal+-u gs))))
+(define/contract ((lift+ f) gs)
+  (((or/c constraint? goal?) . -> . goal?) . -> . ((listof goal+?) . -> . goal+?))
+  (goal+ (f (map goal+-s gs)) (f (map goal+-u gs))))
 
 #| [Goal+] → Goal+ |#
 (define conj+ (lift+ conj+-))
