@@ -21,5 +21,6 @@
 
 (require/provide
  "zk.rkt"
+ "stream.rkt"
  "prelude/unify.rkt"
  "prelude/prelude.rkt")

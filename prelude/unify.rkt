@@ -140,4 +140,4 @@
                 (set-constraintsv s =/=c ncsvu)
                 #f)
             (loop (cdr xs) (add=/= (car xs) ncsvu))))))
-  (λ (s) (cons '=/= (get-constraintsv s =/=c))))
+  (λ (s) (cons '=/= (map set->list (get-constraintsv s =/=c)))))

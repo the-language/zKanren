@@ -22,7 +22,13 @@
 (define (new-id) (set! id-count (+ 1 id-count)) id-count)
 
 #| Pos → Var |#
-(struct var (id))
+(struct var (id)
+  #:methods gen:custom-write
+  [(define (write-proc var port mode)
+     (when mode (write-string "<" port))
+     (display "var:" port)
+     (display (var-id var) port)
+     (when mode (write-string ">" port)))])
 #| Nat |#
 (define var-count 0)
 #| → Var |#
