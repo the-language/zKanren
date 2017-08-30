@@ -87,6 +87,12 @@
 (define-syntax-rule (define-relation (name . args) body)
   (define name (memorize (λ args body))))
 
+#| U Constraint Goal → Goal |#
+(define (->goal x)
+  (if (constraint? x)
+      (new-goal (state-patch (list (state-patch1 '() (list x)))))
+      x))
+
 #| [U Constraint Goal] → Goal |#
 (define (conj+- gs)
   (new-goal
