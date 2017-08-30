@@ -115,7 +115,7 @@
       (sizedstream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
 
 (define/contract (check-constraints vs s)
-  ((listof var) state? . -> . (or/c state? boolean?))
+  ((listof var?) state? . -> . (or/c state? boolean?))
   (let-loop-hash loop id cs (state-c s) ([nm #t] [s s])
                  (or nm s)
                  (let ([ns ((constraints-checkm (get-constraints- id)) vs s)])
