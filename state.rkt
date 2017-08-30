@@ -129,4 +129,4 @@
 #| U Goal Constraint ... → State |#
 (define (new-state+ . gs)
   (let-values ([(c g) (partition constraint? gs)])
-               (s+c+ c (state g (hash)))))
+               (s+c+ c (state g (hash) (weak-set)))))
