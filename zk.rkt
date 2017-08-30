@@ -44,7 +44,7 @@
  new-state
  run-
  run-+
- run-++
+ runzk
  (struct-out goal+)
  noto
  struct
@@ -82,7 +82,7 @@
   (-> goal+? (sizedstream/c state?))
   (run- (goal+-s g)))
 #| Goal+ → SizedStream [Symbol × [Any]] |#
-(define/contract (run-++ g)
+(define/contract (runzk g)
   (-> goal+? (sizedstream/c (listof (cons/c symbol? list?))))
   (sizedstream-map (λ (s) (hash-map (state-c s) (λ (id v) ((constraints-show (get-constraints- id)) s)))) (run-+ g)))
 
