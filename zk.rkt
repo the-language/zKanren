@@ -54,8 +54,8 @@
 (require "id.rkt")
 (require "struct.rkt")
 
-;(define-state-cleaner s
-;  (state (remove-duplicates (state-g s)) (state-c s)))
+(define-state-cleaner s
+  (state (filter-not (λ (x) (member x (state-hg s))) (remove-duplicates (state-g s))) (state-c s) (state-hg s)))
 
 #| State → SizedStream State |#
 (define (pass- s)
