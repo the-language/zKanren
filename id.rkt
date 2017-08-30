@@ -27,6 +27,9 @@
   (set! id-count (+ 1 id-count))
   id-count)
 
+#| Any → Bool |#
+(define (var/c v) (and (var? v) (exact-positive-integer? v)))
+
 #| Pos → Var |#
 (struct var (id)
   #:methods gen:custom-write
@@ -42,6 +45,3 @@
   (-> var/c)
   (set! var-count (+ 1 var-count))
   (var var-count))
-
-#| Any → Bool |#
-(define (var/c v) (and (var? v) (exact-positive-integer? v)))
