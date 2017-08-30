@@ -100,9 +100,8 @@
                  u
                  (new-dgoal idu args (run-goal u)))))))
 
-(define-syntax-rule (define-relation (name args ...) body)
-  (let ([ids (new-id)] [idu (new-id)])
-    (define name (->d-goal+ ids idu (λ (args ...) body)))))
+(define-syntax-rule (define-relation (name . args) body)
+  (define name (memorize (λ args body))))
 
 #| [U Constraint Goal] → Goal |#
 (define (conj+- gs)

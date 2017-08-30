@@ -17,6 +17,7 @@
  "stream.rkt"
  "types.rkt"
  "zk.rkt"
+ "memorize.rkt"
  "prelude/unify.rkt"
  "prelude/prelude.rkt"
  )

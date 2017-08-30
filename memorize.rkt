@@ -14,9 +14,12 @@
 ;;  You should have received a copy of the GNU Affero General Public License
 ;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #lang racket
-(provide
- (struct-out state)
- )
+(provide memorize)
 
-#| [Goal] → Hash ID ConstraintsV → WeakSet Goal → State |#
-(struct state (g c hg))
+#| (Any ... → a) → (Any ... → a) |#
+(define (memorize f)
+  (let ([m (make-weak-hash)])
+    (λ args (hash-ref m args (λ ()
+                               (let ([v (apply f args)])
+                                 (hash-set! m args v)
+                                 v))))))
