@@ -147,8 +147,14 @@
     [(_ () g ...) (all g ...)]
     [(_ (x0 x ...) g ...) (call/fresh (λ (x0) (fresh (x ...) g ...)))]))
 
-#| Goal |#
-(define fail- (new-goal (state-patch '())))
+(define-constraints failc
+  'n
+  (λ (x s) #f)
+  (λ (vs s) #f)
+  (λ (s) #f)
+  (λ (s) (error 'failc)))
+
+(define fail- (new-constraint failc 'c))
 (define succeed- (new-goal (state-patch (list (state-patch1 '() '())))))
 
 #| Goal+ |#

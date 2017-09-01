@@ -55,7 +55,7 @@ Constraints |#
 Constraints |#
 (define/contract (new-constraints empty add check clean show)
   (-> constraintsv?
-      (-> constraintsv? state? (maybe (cons/c state? (listof var?))))
+      (-> constraintv? state? (maybe (cons/c state? (listof var?))))
       (-> (listof var?) state? (or/c state? boolean?))
       (-> state? (maybe state?))
       (-> state? (cons/c symbol? list?))
