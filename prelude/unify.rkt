@@ -44,8 +44,10 @@
                                   (and xs ys (append xs ys))))]
       [(vector? x) (and (vector? y) (unify cv (vector->list x) (vector->list y)))]
       [(struct? x) (and (struct? y) (struct-type-eq? x y) (unify cv (struct->list x) (struct->list y)))]
-      [(hash? x) (and (hash? y) (unify cv (hash->list x) (hash->list y)))]
       [else #f])))
+
+#| ConstraintsV → Any → Any → Bool |#
+(define (unify? cv x y) (null? (unify cv x y)))
 
 #| Struct → Struct → Bool |#
 (define (struct-type-eq? x y)
@@ -111,8 +113,8 @@
             ncsvu
             (let ([ns (set-filter (λ (y)
                                     (let ([v2 (car y)] [z (cdr y)])
-                                      (if (equal? v v2)
-                                          (not (null? (unify csv x z)))
+                                      (if (unify? csv v v2)
+                                          (not (unify? csv x z))
                                           #t))) s)])
               (if (set-empty? ns)
                   #f
