@@ -107,6 +107,10 @@
 (define (set-filter f s)
   (list->set (filter f (set->list s))))
 
+#| (a → b) → Set a → Set b |#
+(define (set-map f s)
+  (list->set (map f (set->list s))))
+
 #| Var → Any → ConstraintsV → ConstraintsVUn → Maybe ConstraintsVUn |#
 (define (check== v x csv csvu)
   (let-loop loop s csvu [(ncsvu '())]
@@ -129,7 +133,7 @@
   (λ (vs s)
     (let ([csv (get-constraintsv s ==c)] [csvu (get-constraintsv s =/=c)])
       (let-loop loop v vs ([b #t] [ncsvu csvu])
-                (or b (set-constraintsv s =/=c ncsvu))
+                (or b (set-constraintsv s =/=c (=/=-walk ncsvu)))
                 (let ([nncsvu (check=/=1 v csv csvu)])
                   (and nncsvu (if (pair? nncsvu)
                                   (loop #f nncsvu)
@@ -143,3 +147,7 @@
                 #f)
             (loop (cdr xs) (add=/= (car xs) ncsvu))))))
   (λ (s) (cons '=/= (map set->list (get-constraintsv s =/=c)))))
+
+#| ConstraintsV → ConstraintsVUn → ConstraintsVUn |#
+(define (=/=-walk csv csvu)
+  (map (λ (s) (set-map (λ (p) (cons (walk (car p) csv) (cdr p))) s)) csvu))
