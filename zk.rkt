@@ -59,7 +59,7 @@
 (require "memorize.rkt")
 
 (define-state-cleaner s
-  (let ([gs (filter-not (λ (x) (set-member? x (state-hg s))) (remove-duplicates (state-g s)))])
+  (let ([gs (filter-not (λ (x) (set-member? (state-hg s) x)) (remove-duplicates (state-g s)))])
     (if (< (length gs) (length (state-g s)))
         (state gs (state-c s) (state-hg s))
         #f)))
