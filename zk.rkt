@@ -19,6 +19,7 @@
  pass-
  pass
  pass*
+ λr
  define-relation
  conj+-
  conj+
@@ -46,6 +47,8 @@
  (struct-out goal+)
  noto
  struct
+ succeed
+ fail
  )
 (require "constraint.rkt")
 (require "state.rkt")
@@ -53,6 +56,7 @@
 (require "goal.rkt")
 (require "id.rkt")
 (require "struct.rkt")
+(require "memorize.rkt")
 
 ;(define-state-cleaner s
 ;  (let ([gs (filter-not (λ (x) (member x (state-hg s))) (remove-duplicates (state-g s)))])
@@ -73,22 +77,30 @@
       (sizedstream s)
       (sizedstream-bind (pass s) pass*)))
 
-#| U Constraint Goal → SizedStream State |#
 (define/contract (run- g)
   (-> (or/c constraint? goal?) (sizedstream/c state?))
   (pass* (new-state+ g)))
 
-#| Goal+ → SizedStream (Hash ID ConstraintsV) |#
 (define/contract (run-+ g)
   (-> goal+? (sizedstream/c state?))
   (run- (goal+-s g)))
-#| Goal+ → SizedStream [Symbol × [Any]] |#
 (define/contract (runzk g)
   (-> goal+? (sizedstream/c (listof (cons/c symbol? list?))))
   (sizedstream-map (λ (s) (hash-map (state-c s) (λ (id v) ((constraints-show (get-constraints- id)) s)))) (run-+ g)))
 
-(define-syntax-rule (define-relation (name . args) body)
-  (define name (memorize (λ args body))))
+#| Goal → Goal |#
+(define-syntax-rule (goal-pack g) (new-goal (state-patch (list (state-patch1 (list g) '())))))
+
+#| Promise Goal+ → Goal+ |#
+(define (recgoal+ g)
+  (goal+ (goal-pack (->goal (goal+-s (force g))))
+         (goal-pack (->goal (goal+-u (force g))))))
+
+(define-syntax-rule (λr args body)
+  (memorize (λ args (recgoal+ (delay body)))))
+
+(define-syntax-rule (define-relation (name arg ...) body)
+  (define name (λr (arg ...) body)))
 
 #| U Constraint Goal → Goal |#
 (define (->goal x)
@@ -134,3 +146,11 @@
   (syntax-rules ()
     [(_ () g ...) (all g ...)]
     [(_ (x0 x ...) g ...) (call/fresh (λ (x0) (fresh (x ...) g ...)))]))
+
+#| Goal |#
+(define fail- (new-goal (state-patch '())))
+(define succeed- (new-goal (state-patch (list (state-patch1 '() '())))))
+
+#| Goal+ |#
+(define succeed (goal+ succeed- fail-))
+(define fail (goal+ fail- succeed-))

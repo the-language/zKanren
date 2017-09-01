@@ -23,4 +23,5 @@
  "zk.rkt"
  "stream.rkt"
  "prelude/unify.rkt"
- "prelude/prelude.rkt")
+ "prelude/prelude.rkt"
+ "prelude/leto.rkt")
