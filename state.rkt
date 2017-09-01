@@ -101,13 +101,12 @@
 
 (define/contract (clean-state s)
   (state? . -> . state?)
-  (let loop ([cs cleanc] [s s])
-    (if (null? cs)
-        s
-        (let ([ns ((car cleanc) s)])
-          (if ns
-              (loop cleanc ns)
-              (loop (cdr cleanc) s))))))
+  (let-loop loop f cleanc ([s s])
+            s
+            (let ([ns (f s)])
+              (if ns
+                  (clean-state ns)
+                  (loop s)))))
 
 (define/contract (patch+ s p)
   (state? (listof state-patch?) . -> . (sizedstream/c state?))

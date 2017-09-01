@@ -58,11 +58,11 @@
 (require "struct.rkt")
 (require "memorize.rkt")
 
-;(define-state-cleaner s
-;  (let ([gs (filter-not (λ (x) (member x (state-hg s))) (remove-duplicates (state-g s)))])
-;    (if (< (length gs) (length (state-g s)))
-;        (state gs (state-c s) (state-hg s))
-;        #f)))
+(define-state-cleaner s
+  (let ([gs (filter-not (λ (x) (set-member? x (state-hg s))) (remove-duplicates (state-g s)))])
+    (if (< (length gs) (length (state-g s)))
+        (state gs (state-c s) (state-hg s))
+        #f)))
 
 #| State → SizedStream State |#
 (define (pass- s)
