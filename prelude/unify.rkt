@@ -48,6 +48,7 @@
 
 #| ConstraintsV → Any → Any → Bool |#
 (define (unify? cv x y) (null? (unify cv x y)))
+(define (ununify? cv x y) (not (unify cv x y)))
 
 #| Struct → Struct → Bool |#
 (define (struct-type-eq? x y)
@@ -86,7 +87,7 @@
       [else us])))
 
 (require racket/set)
-#| ConstraintsVUn = [Set (Var × Any)] |#
+#| ConstraintsVUn = [NonEmptySet (Var × Any)] |#
 
 #| Set (Var × Any) → ConstraintsVUn → ConstraintsVUn |#
 (define (add=/= c cs)
@@ -141,11 +142,31 @@
                                   (loop #f nncsvu)
                                   (loop b ncsvu)))))))
   (λ (s)
-    (let ([csvu (get-constraintsv s =/=c)])
-      (let loop ([xs csvu] [ncsvu csvu])
-        (if (null? xs)
-            (if (< (length ncsvu) (length csvu))
-                (set-constraintsv s =/=c ncsvu)
-                #f)
-            (loop (cdr xs) (add=/= (car xs) ncsvu))))))
+    (let ([csv (get-constraintsv s ==c)] [csvu (get-constraintsv s =/=c)])
+      (let ([r (clean-=/=-subset csv csvu)])
+        (let ([ncsvu (clean-ununify csv (or r csvu))])
+          (or ncsvu r)))))
   (λ (s) (cons '=/= (map set->list (get-constraintsv s =/=c)))))
+
+#| ConstraintsV → ConstraintsVUn → U False ConstraintsVUn |#
+(define (clean-ununify csv csvu)
+  (let ([b #f])
+    (and b (filter-not
+            set-empty?
+            (map
+             (λ (s)
+               (set-filter
+                (λ (p)
+                  (if (ununify? csv (car p) (cdr p))
+                      (begin
+                        (set! b #t)
+                        #f)
+                      #t))
+                s))
+             csvu)))))
+(define (clean-=/=-subset csv csvu)
+  (let-loop loop x csvu ([ncsvu '()])
+            (if (< (length ncsvu) (length csvu))
+                ncsvu
+                #f)
+            (loop (add=/= x ncsvu))))
