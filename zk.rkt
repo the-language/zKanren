@@ -43,7 +43,7 @@
  new-state
  run-
  run-+
- runzk
+ runzk-
  (struct-out goal+)
  noto
  struct
@@ -84,9 +84,12 @@
 (define/contract (run-+ g)
   (-> goal+? (sizedstream/c state?))
   (run- (goal+-s g)))
-(define/contract (runzk g)
+(define/contract (runzk- g)
   (-> goal+? (sizedstream/c (listof (cons/c symbol? list?))))
   (sizedstream-map (λ (s) (hash-map (state-c s) (λ (id v) ((constraints-show (get-constraints- id)) s)))) (run-+ g)))
+(define-syntax-rule (runzk (v ...) g)
+  (let ([v (new-var)] ...)
+    (cons (list v ...) (runzk g))))
 
 #| Goal → Goal |#
 (define-syntax-rule (goal-pack g) (new-goal (state-patch (list (state-patch1 (list g) '())))))
@@ -142,10 +145,9 @@
 (define (all . gs) (conj+ gs))
 (define-syntax-rule (conde (g0 g ...) (g0* g* ...) ...)
   (disj+ (list (all g0 g ...) (all g0* g* ...) ...)))
-(define-syntax fresh
-  (syntax-rules ()
-    [(_ () g ...) (all g ...)]
-    [(_ (x0 x ...) g ...) (call/fresh (λ (x0) (fresh (x ...) g ...)))]))
+(define-syntax-rule (fresh (v ...) g ...)
+  (let ([v (new-var)] ...)
+    (all g ...)))
 
 (define-constraints failc
   'n
