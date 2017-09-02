@@ -133,7 +133,7 @@
   (λ (vs s)
     (let ([csv (get-constraintsv s ==c)] [csvu (get-constraintsv s =/=c)])
       (let-loop loop v vs ([b #t] [ncsvu csvu])
-                (or b (set-constraintsv s =/=c (=/=-walk ncsvu)))
+                (or b (set-constraintsv s =/=c ncsvu))
                 (let ([nncsvu (check=/=1 v csv csvu)])
                   (and nncsvu (if (pair? nncsvu)
                                   (loop #f nncsvu)
@@ -147,7 +147,3 @@
                 #f)
             (loop (cdr xs) (add=/= (car xs) ncsvu))))))
   (λ (s) (cons '=/= (map set->list (get-constraintsv s =/=c)))))
-
-#| ConstraintsV → ConstraintsVUn → ConstraintsVUn |#
-(define (=/=-walk csv csvu)
-  (map (λ (s) (set-map (λ (p) (cons (walk (car p) csv) (cdr p))) s)) csvu))
