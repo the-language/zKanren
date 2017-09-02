@@ -88,9 +88,9 @@
 (define/contract (runzk- g)
   (-> goal+? (sizedstream/c (listof (cons/c symbol? list?))))
   (sizedstream-map (λ (s) (hash-map (state-c s) (λ (id v) ((constraints-show (get-constraints- id)) s)))) (run-+ g)))
-(define-syntax-rule (runzk (v ...) g)
+(define-syntax-rule (runzk (v ...) g ...)
   (let ([v (new-var)] ...)
-    (cons (list v ...) (runzk g))))
+    (cons (list v ...) (runzk- (all g ...)))))
 
 #| Goal → Goal |#
 (define-syntax-rule (goal-pack g) (new-goal (state-patch (list (state-patch1 (list g) '())))))
