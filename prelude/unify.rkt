@@ -73,6 +73,8 @@
                       (cons (set-constraintsv s ==c csv) vs)
                       (let ([a (car nc)])
                         (let ([v (car a)] [x (cdr a)])
+                          (when (hash-has-key? csv v)
+                            (error '==))
                           (loop (hash-set csv v x) (cdr nc) (cons v vs))))))))))
   (λ (vs s) #t)
   (λ (s) #f)
