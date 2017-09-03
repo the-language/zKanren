@@ -41,10 +41,8 @@
  get-constraintsv
  set-constraintsv
  new-state
- run-
- run-+
- runzk-
  runzk
+ runzk*
  (struct-out goal+)
  noto
  struct
@@ -60,23 +58,17 @@
 (require "memorize.rkt")
 
 (define-state-cleaner s
-  (let ([gs (remove-duplicates (state-g s))])
+  (let ([gs (filter-not (λ (x) (set-member? (state-hg s) x)) (remove-duplicates (state-g s)))])
     (if (< (length gs) (length (state-g s)))
         (state gs (state-c s) (state-hg s))
         #f)))
 
-;(define-state-cleaner s
-;  (let ([gs (filter-not (λ (x) (set-member? (state-hg s) x)) (remove-duplicates (state-g s)))])
-;    (if (< (length gs) (length (state-g s)))
-;        (state gs (state-c s) (state-hg s))
-;        #f)))
-
 #| State → SizedStream State |#
 (define (pass- s)
-  (let ([g (state-g s)] [c (state-c s)])
-    (if (null? g)
+  (let ([gs (state-g s)] [c (state-c s)])
+    (if (null? gs)
         (sizedstream s)
-        (patch+ (state '() c (state-hg s)) (map run-goal g)))))
+        (patch++ (state '() c (state-hg s)) gs))))
 (define (pass s)
   (sizedstream-map clean-state (pass- s)))
 (define (pass* s)
@@ -99,7 +91,7 @@
     (cons (list v ...) (runzk- (all g ...)))))
 (define-syntax-rule (runzk* (v ...) g ...)
   (let ([x (runzk (v ...) g ...)])
-    (cond (car x) (sizedstream->list (cdr x)))))
+    (cons (car x) (sizedstream->list (cdr x)))))
 
 #| Goal → Goal |#
 (define-syntax-rule (goal-pack g) (new-goal (state-patch (list (state-patch1 (list g) '())))))

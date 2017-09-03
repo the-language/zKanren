@@ -25,6 +25,7 @@
  define-state-cleaner
  clean-state
  patch+
+ patch++
  check-constraints
  new-state
  new-state+
@@ -38,6 +39,7 @@
 (require "contract.rkt")
 (require "types.rkt")
 (require "let-loop.rkt")
+(require "goal.rkt")
 
 #| [Goal] → [Constraint] → StatePatch1 |#
 (struct state-patch1 (gs cs))
@@ -112,6 +114,11 @@
   (if (null? p)
       (sizedstream s)
       (sizedstream-bind (patch s (car p)) (λ (ns) (patch+ ns (cdr p))))))
+
+(define/contract (patch++ s gs)
+  (state? (listof goal?) . -> . (sizedstream/c state?))
+  (let ([ss (patch+ s (map run-goal gs))])
+    (sizedstream-map (λ (s) (state (state-g s) (state-c s) (append-hg gs (state-hg s)))) ss)))
 
 (define/contract (check-constraints vs s)
   ((listof var?) state? . -> . (or/c state? boolean?))
