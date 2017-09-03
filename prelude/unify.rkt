@@ -53,14 +53,18 @@
         (walk2 nx h l))))
 
 #| ConstraintsV → Any → Any → Maybe [Var × Any] |#
-(define (unify cv x y)
-  (let ([x (walk x cv)] [y (walk y cv)])
+(define (unify cv x y) (%unify cv '() x y))
+
+#| ConstraintsV → [Var × Any] → Any → Any → Maybe [Var × Any] |#
+(define (%unify cv l x y)
+  (let ([x (walk2 x cv l)] [y (walk2 y cv l)])
     (cond
       [(equal? x y) '()]
       [(var? x) (list (cons x y))]
       [(var? y) (list (cons y x))]
-      [(pair? x) (and (pair? y) (let ([xs (unify cv (car x) (car y))] [ys (unify cv (cdr x) (cdr y))])
-                                  (and xs ys (append xs ys))))]
+      [(pair? x) (and (pair? y) (let ([xs (unify cv l (car x) (car y))] )
+                                  (and xs (let ([ys (unify cv (append xs l) (cdr x) (cdr y))])
+                                            (and ys (append xs ys))))))]
       [(vector? x) (and (vector? y) (unify cv (vector->list x) (vector->list y)))]
       [(struct? x) (and (struct? y) (struct-type-eq? x y) (unify cv (struct->list x) (struct->list y)))]
       [else #f])))
