@@ -36,6 +36,22 @@
             x))
       x))
 
+#| U Var a → [Var × Any] → U Var a |#
+(define (walkl x l)
+  (if (var? x)
+      (let ([nv (assoc x l)])
+        (if nv
+            (walkl (cdr nv) l)
+            x))
+      x))
+
+#| U Var a → Hash Var Any → [Var × Any] → U Var a |#
+(define (walk2 x h l)
+  (let ([nx (walkl (walk x h) l)])
+    (if (equal? x nx)
+        x
+        (walk2 nx h l))))
+
 #| ConstraintsV → Any → Any → Maybe [Var × Any] |#
 (define (unify cv x y)
   (let ([x (walk x cv)] [y (walk y cv)])
