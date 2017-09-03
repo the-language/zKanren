@@ -44,7 +44,7 @@
 #| [Goal] → [Constraint] → StatePatch1 |#
 (struct state-patch1 (gs cs))
 
-#| [StatePatch1] → StatePatch |#
+#| NonEmptyList StatePatch1 → StatePatch |#
 (struct state-patch (vs))
 
 #| State → StatePatch → Stream State |#
@@ -118,7 +118,7 @@
 (define/contract (patch++ s gs)
   (state? (listof goal?) . -> . (sizedstream/c state?))
   (let ([ss (patch+ s (map run-goal gs))])
-    (sizedstream-map (λ (s) (state (state-g s) (state-c s) (append-hg gs (state-hg s)))) ss)))
+    (sizedstream-map (λ (s) (state (state-g s) (state-c s) (append-hg (filter goal-1? gs) (state-hg s)))) ss)))
 
 (define/contract (check-constraints vs s)
   ((listof var?) state? . -> . (or/c state? boolean?))
@@ -136,3 +136,6 @@
 (define (new-state+ . gs)
   (let-values ([(c g) (partition constraint? gs)])
                (s+c+ c (state g (hash) (weak-set)))))
+
+#| Goal → Bool |#
+(define (goal-1? g) (null? (cdr (state-patch-vs (run-goal g)))))
