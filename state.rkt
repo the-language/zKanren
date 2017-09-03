@@ -62,8 +62,7 @@
 (define/contract (patch-- s p)
   (-> state? state-patch1? (maybe state?))
   (let ([gs (state-patch1-gs p)] [cs (state-patch1-cs p)])
-    (let ([ns (s+c+ cs (state (append gs (state-g s)) (state-c s) (state-hg s)))])
-      (and ns (state (state-g ns) (state-c ns) (append-hg gs (state-hg ns)))))))
+    (s+c+ cs (state (append gs (state-g s)) (state-c s) (state-hg s)))))
 
 #| [Constraint] → State → Maybe (State × [Var]) |#
 (define/contract (s+c cs s)
