@@ -60,10 +60,16 @@
 (require "memorize.rkt")
 
 (define-state-cleaner s
-  (let ([gs (filter-not (λ (x) (set-member? (state-hg s) x)) (remove-duplicates (state-g s)))])
+  (let ([gs (remove-duplicates (state-g s))])
     (if (< (length gs) (length (state-g s)))
         (state gs (state-c s) (state-hg s))
         #f)))
+
+;(define-state-cleaner s
+;  (let ([gs (filter-not (λ (x) (set-member? (state-hg s) x)) (remove-duplicates (state-g s)))])
+;    (if (< (length gs) (length (state-g s)))
+;        (state gs (state-c s) (state-hg s))
+;        #f)))
 
 #| State → SizedStream State |#
 (define (pass- s)
@@ -91,6 +97,9 @@
 (define-syntax-rule (runzk (v ...) g ...)
   (let ([v (new-var)] ...)
     (cons (list v ...) (runzk- (all g ...)))))
+(define-syntax-rule (runzk* (v ...) g ...)
+  (let ([x (runzk (v ...) g ...)])
+    (cond (car x) (sizedstream->list (cdr x)))))
 
 #| Goal → Goal |#
 (define-syntax-rule (goal-pack g) (new-goal (state-patch (list (state-patch1 (list g) '())))))
