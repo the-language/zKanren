@@ -2,8 +2,9 @@ zKanren
 ========
 ```racket
 (require "zkanren.rkt")
+(runzk* () fail) ;; => '(())
 (define-relation (r) (all succeed (r)))
-(sizedstream->list (runzk- (r))) ;; => '(())
-(define-relation (r2) (conde (succeed) ((r))))
-(sizedstream->list (runzk- (all (r2) fail))) ;; => '()
+(runzk* () (r)) ;; => '(() ())
+(define-relation (r2) (conde (succeed) ((r2))))
+(runzk* () (all (r2) fail)) ;; => '(())
 ```
