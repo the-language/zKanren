@@ -12,7 +12,6 @@
  "state.rkt"
  "struct.rkt"
  "contract.rkt"
- "hash.rkt"
  "let-loop.rkt"
  "stream.rkt"
  "types.rkt"

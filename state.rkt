@@ -34,7 +34,6 @@
  )
 (require "constraint.rkt")
 (require "stream.rkt")
-(require "hash.rkt")
 (require "id.rkt")
 (require "contract.rkt")
 (require "types.rkt")
