@@ -49,7 +49,7 @@
 #| State → StatePatch → Stream State |#
 (define/contract (patch s p)
   (-> state? state-patch? (sizedstream/c state?))
-  (patch- s (state-patch-vs p)))
+  (delay (patch- s (state-patch-vs p))))
 
 #| State → [StatePatch1] → SizedStream State |#
 (define/contract (patch- s ps)
