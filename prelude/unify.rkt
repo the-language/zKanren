@@ -66,17 +66,12 @@
                                   (and xs (let ([ys (unify cv (append xs l) (cdr x) (cdr y))])
                                             (and ys (append xs ys))))))]
       [(vector? x) (and (vector? y) (unify cv (vector->list x) (vector->list y)))]
-      [(struct? x) (and (struct? y) (struct-type-eq? x y) (unify cv (struct->list x) (struct->list y)))]
+      [(struct? x) (and (struct? y) (unify cv (struct->vector x) (struct->vector y)))]
       [else #f])))
 
 #| ConstraintsV → Any → Any → Bool |#
 (define (unify? cv x y) (null? (unify cv x y)))
 (define (ununify? cv x y) (not (unify cv x y)))
-
-#| Struct → Struct → Bool |#
-(define (struct-type-eq? x y)
-  (let-values ([(tx _x) (struct-info x)] [(ty _y) (struct-info y)])
-    (equal? tx ty)))
 
 #| Any → Any → Constraint |#
 (define (==- x y) (new-constraint ==c (cons x y)))
