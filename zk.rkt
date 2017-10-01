@@ -132,14 +132,14 @@
                              (state-patch1 (list (car gs)) '()))
                          rs))))))
 
-#| ([U Constraint Goal] → Goal) → ([Goal+] → Goal+) |#
-(define/contract ((lift+ f) gs)
-  (((listof (or/c constraint? goal?)) . -> . goal?) . -> . ((listof goal+?) . -> . goal+?))
-  (goal+ (f (map goal+-s gs)) (f (map goal+-u gs))))
+(define/contract ((lift+ f g) gs)
+  (((listof (or/c constraint? goal?)) . -> . goal?) ((listof (or/c constraint? goal?)) . -> . goal?)
+                                                    . -> . ((listof goal+?) . -> . goal+?))
+  (goal+ (f (map goal+-s gs)) (g (map goal+-u gs))))
 
 #| [Goal+] → Goal+ |#
-(define conj+ (lift+ conj+-))
-(define disj+ (lift+ disj+-))
+(define conj+ (lift+ conj+- disj+-))
+(define disj+ (lift+ disj+- conj+-))
 
 #| (Var → a) → a |#
 (define (call/fresh f) (f (new-var)))
