@@ -1,5 +1,6 @@
 zKanren
 ========
+警告:zKanren有bug,不再维护,之后将被重写
 ```racket
 (require "zkanren.rkt")
 (runzk* () fail) ;; => '(())
